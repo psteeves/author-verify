@@ -1,8 +1,10 @@
+import os
+from copy import copy
+import logging
+import datetime
 import tensorflow as tf
 import pandas as pd
 import numpy as np
-import os
-from copy import copy
 import pickle
 from nltk.tokenize import RegexpTokenizer
 w_tokenizer = RegexpTokenizer('\w+')
@@ -12,8 +14,22 @@ sequence_length = 256
 num_refs = 4
 hidden_size = 512
 
-dic = pickle.load(open('dictionary', 'rb'))
-stored_embeddings = pickle.load(open('embeddings', 'rb'))
+dic = pickle.load(open('models/dictionary', 'rb'))
+stored_embeddings = pickle.load(open('models/embeddings', 'rb'))
+
+def configure_logger(level):
+    formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(message)s')
+    logger = logging.getLogger('lstm_training')
+    logger.setLevel(level)
+
+    now = datetime.datetime.now()
+    fname = now.day+'-'+now.month+'_'+now.hour+':'now.minute+'.log'
+    fh = logging.FileHandler(os.path.join('logs',fname))
+    fh.setLevel(logging.INFO)
+    fh.setFormatter(formatter)
+
+    logger.addHandler(fh)
+    return logger
 
 def create_data(min_words = sequence_length, num_refs = num_refs, verbose = False):
     """
@@ -90,7 +106,6 @@ def generate_batch(data, batch_num, size):
 
     refs = [np.stack(refs[col].apply(process_file).values) for col in refs]
     candidates = np.stack(candidates.apply(process_file).values)
-
     targets = subset.iloc[:,-1].values.reshape(size, 1)
 
     return refs, candidates, targets
@@ -105,6 +120,8 @@ def get_accuracy(outs, labels):
 
 
 def train(data, epochs = 20, batch_size = 64):
+    logger = configure_logger(logging.INFO)
+    
     graph = tf.Graph()
     with graph.as_default():
         train_refs = [tf.placeholder(tf.int32, shape = (None, sequence_length)) for _ in range(num_refs)]
@@ -154,10 +171,10 @@ def train(data, epochs = 20, batch_size = 64):
                     print('Batch {} of {}. Average loss over past 400 batches: {:0.3f}'.format(batch + 1, num_batches, cum_loss/400))
                     cum_loss = 0
             print('Finished epoch {}\n'.format(epoch+1))
-            all_refs, all_candidates, all_targets = generate_batch(data, 0, len(data))
+            all_refs, all_candidates, all_targets = generate_batch(data, np.random.choice(4), len(data)/4)
             acc_feed_dict = {t_ref: b_ref for t_ref, b_ref in zip(train_refs, all_refs)}
             acc_feed_dict.update({train_candidates: all_candidates, train_targets: all_targets})
-            print('The accuracy is {:.1%}'.format(accuracy.eval(feed_dict=acc_feed_dict)))
+            print('The accuracy on a random quarter of the training set is {:.1%}'.format(accuracy.eval(feed_dict=acc_feed_dict)))
 
         saver.save(sess, './models/lstm/model')
 
@@ -166,7 +183,7 @@ def sigmoid(x):
 
 if __name__ == "__main__":
     if os.path.exists('train-data/data.csv'):
-        data = pd.read_csv('train-data/data.csv')
+        data = pd.read_csv('train-data/data.csv').iloc[:200,:]
     else:
         data = create_data()
 

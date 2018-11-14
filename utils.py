@@ -13,7 +13,7 @@ def easy_clean(text):
 def get_all_words():
     parent = 'data/Reuters-50/'
     authors = os.listdir(parent)
-    if 'all_text.txt' in os.path.exists('train-data/all_text.txt':
+    if os.path.exists('train-data/all_text.txt'):
         print('All words were already extracted.... Overwriting')
     all_text = ''
     for author in authors:

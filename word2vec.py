@@ -78,9 +78,7 @@ def training_loop(data, vocab_size):
         embeddings = tf.Variable(tf.random_uniform((vocab_size, embedding_size), -1.0, 1.0))
         embeds = tf.nn.embedding_lookup(embeddings, train_inputs)
         embed_context = tf.reduce_mean(embeds, 1)
-        print('inputs',train_inputs)
-        print('embeddings',embeddings)
-        print('embed lookup', embeds)
+  
         soft_weights = tf.Variable(tf.truncated_normal((vocab_size, embedding_size)))
         soft_biases = tf.Variable(tf.zeros((vocab_size)))
 

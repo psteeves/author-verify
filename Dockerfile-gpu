@@ -1,0 +1,15 @@
+FROM tensorflow/tensorflow:latest-gpu-py3
+
+COPY *.py /home/
+COPY train-data/ /home/train-data
+COPY models/ /home/models
+
+USER root
+
+RUN apt-get update -yq && apt-get install -yq vim 
+
+USER $NB_UID
+
+RUN cd /home/
+
+CMD ["bash"]

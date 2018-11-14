@@ -1,0 +1,7 @@
+image: tf-gpu
+command: ["python", "lstm.py"]
+name: pat_author_verify
+reqCores: 4
+reqGpus: 1
+reqRamGbytes: 20
+volumes: -/mnt/home/psteeves/author-verify:/home/
