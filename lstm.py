@@ -12,8 +12,8 @@ sequence_length = 256
 num_refs = 4
 hidden_size = 512
 
-dic = pickle.load(open('models/dictionary', 'rb'))
-stored_embeddings = pickle.load(open('models/embeddings', 'rb'))
+dic = pickle.load(open('dictionary', 'rb'))
+stored_embeddings = pickle.load(open('embeddings', 'rb'))
 
 def create_data(min_words = sequence_length, num_refs = num_refs, verbose = False):
     """
@@ -104,7 +104,7 @@ def get_accuracy(outs, labels):
     return accuracy
 
 
-def train(data, epochs = 2, batch_size = 64):
+def train(data, epochs = 20, batch_size = 64):
     graph = tf.Graph()
     with graph.as_default():
         train_refs = [tf.placeholder(tf.int32, shape = (None, sequence_length)) for _ in range(num_refs)]
@@ -125,7 +125,8 @@ def train(data, epochs = 2, batch_size = 64):
         all_states = tf.concat([mean_states_refs, last_states_candidate], axis = 1)
 
         layer1 = tf.layers.dense(all_states, 128, kernel_initializer = initializer, activation = tf.nn.relu)
-        outputs = tf.layers.dense(layer1, 1, kernel_initializer = initializer, activation = None)
+        layer2 = tf.layers.dense(layer1, 32, kernel_initializer = initializer, activation = tf.nn.relu)
+        outputs = tf.layers.dense(layer2, 1, kernel_initializer = initializer, activation = None)
 
         loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=train_targets, logits=outputs))
         optimizer = tf.train.AdamOptimizer()
@@ -158,14 +159,14 @@ def train(data, epochs = 2, batch_size = 64):
             acc_feed_dict.update({train_candidates: all_candidates, train_targets: all_targets})
             print('The accuracy is {:.1%}'.format(accuracy.eval(feed_dict=acc_feed_dict)))
 
-        saver.save(sess, './model')
+        saver.save(sess, './models/lstm/model')
 
 def sigmoid(x):
     return 1/ (1 + np.exp(-x))
 
 if __name__ == "__main__":
     if os.path.exists('train-data/data.csv'):
-        data = pd.read_csv('train-data/data.csv').iloc[:100,:]
+        data = pd.read_csv('train-data/data.csv')
     else:
         data = create_data()
 
