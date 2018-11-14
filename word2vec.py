@@ -3,56 +3,10 @@ import numpy as np
 import collections
 import os
 import pickle
+from utils import easy_clean, get_all_words
 from nltk.tokenize import RegexpTokenizer
 w_tokenizer = RegexpTokenizer('\w+')
 
-
-def easy_clean(text):
-    tokenized = w_tokenizer.tokenize(text)
-    return ' '.join(tokenized).lower()
-
-
-def get_all_words():
-    parent = 'data/Reuters-50/'
-    authors = os.listdir(parent)
-    if 'all_text.txt' in authors:
-        authors.remove('all_text.txt')
-        print('All words were already extracted.... Overwriting')
-        if 'all_text_raw.txt' in authors:
-            authors.remove('all_text_raw.txt')
-    all_text = ''
-    for author in authors:
-        files = os.listdir(os.path.join(parent, author))
-        if 'all_text.txt' in files:
-            files = list(set(files) - {'all_text.txt'})
-        for file in files:
-            with open(os.path.join(parent, author, file), 'r') as f:
-                all_text += f.read()
-
-    clean_text = easy_clean(all_text)
-    with open(os.path.join(parent, 'all_text.txt'), 'w') as f:
-        f.write(clean_text)
-    return clean_text
-
-
-def get_all_words_raw():
-    parent = 'data/Reuters-50/'
-    authors = os.listdir(parent)
-    if 'all_text_raw.txt' in authors:
-        authors.remove('all_text_raw.txt')
-        print('All raw words were already extracted.... Overwriting')
-        if 'all_text.txt' in authors:
-            authors.remove('all_text.txt')
-    all_text_raw = ''
-    for author in authors:
-        files = os.listdir(os.path.join(parent, author))
-        for file in files:
-            with open(os.path.join(parent, author, file), 'r') as f:
-                all_text_raw += f.read()
-
-    with open(os.path.join(parent, 'all_text_raw.txt'), 'w') as f:
-        f.write(all_text_raw)
-    return all_text_raw
 
 
 def create_data(words, vocab_size):
@@ -111,7 +65,7 @@ def generate_batch(data, batch_num, size, window):
 
 def training_loop(data, vocab_size):
     window_size = 2
-    embedding_size = 30
+    embedding_size = 80
     num_valid = 10    # Num words to use for validation
 
     graph = tf.Graph()
@@ -124,7 +78,9 @@ def training_loop(data, vocab_size):
         embeddings = tf.Variable(tf.random_uniform((vocab_size, embedding_size), -1.0, 1.0))
         embeds = tf.nn.embedding_lookup(embeddings, train_inputs)
         embed_context = tf.reduce_mean(embeds, 1)
-
+        print('inputs',train_inputs)
+        print('embeddings',embeddings)
+        print('embed lookup', embeds)
         soft_weights = tf.Variable(tf.truncated_normal((vocab_size, embedding_size)))
         soft_biases = tf.Variable(tf.zeros((vocab_size)))
 
@@ -169,7 +125,7 @@ def training_loop(data, vocab_size):
 
 if __name__ == "__main__":
     #words = get_all_words().split()
-    with open('data/Reuters-50/all_text.txt') as f:
+    with open('train-data/all_text.txt') as f:
         words = f.read().split()
     vocab_size = 15000
     word_index_map, index_word_map, data, _ = create_data(words, vocab_size)

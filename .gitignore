@@ -1,4 +1,7 @@
 old.*
 data/*
+train-data/*
 .ipynb_checkpoints/*
+__pycache__/*
 playground.ipynb
+
