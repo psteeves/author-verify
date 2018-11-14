@@ -120,7 +120,7 @@ def training_loop(data, vocab_size):
                 print('{}: {}'.format(index_word_map[valid_word], [index_word_map[w] for w in nearest]))
             print('\n\n')
 
-        pickle.dump(embeddings.eval(), open('embeddings','wb'))
+        pickle.dump(embeddings.eval(), open('models/embeddings','wb'))
 
 
 if __name__ == "__main__":
@@ -129,5 +129,5 @@ if __name__ == "__main__":
         words = f.read().split()
     vocab_size = 15000
     word_index_map, index_word_map, data, _ = create_data(words, vocab_size)
-    pickle.dump(word_index_map, open('dictionary', 'wb'))
+    pickle.dump(word_index_map, open('models/dictionary', 'wb'))
     training_loop(data, vocab_size)
