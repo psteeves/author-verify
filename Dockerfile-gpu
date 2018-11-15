@@ -3,13 +3,12 @@ FROM tensorflow/tensorflow:latest-gpu-py3
 COPY *.py /home/
 COPY train-data/ /home/train-data
 COPY models/ /home/models
+COPY data/ /home/data
+COPY logs/ /home/logs
 
-USER root
+RUN apt-get update -yq && apt-get install -yq vim && yes | pip install nltk
 
-RUN apt-get update -yq && apt-get install -yq vim 
+WORKDIR /home/
+RUN rm -rf /notebooks/
 
-USER $NB_UID
-
-RUN cd /home/
-
-CMD ["bash"]
+CMD ["python", "lstm.py"]
