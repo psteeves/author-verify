@@ -119,7 +119,7 @@ def get_accuracy(outs, labels):
     return accuracy
 
 
-def train(data, epochs = 2, batch_size = 64):
+def train(data, epochs = 20, batch_size = 64):
     logger = configure_logger(logging.INFO)
 
     graph = tf.Graph()
@@ -168,14 +168,17 @@ def train(data, epochs = 2, batch_size = 64):
                 feed_dict.update({train_candidates: batch_candidates, train_targets: batch_targets})
                 _, l = sess.run([train_op, loss], feed_dict=feed_dict)
                 cum_loss += l
-                if (batch + 1) % 200 == 0:
-                    print('Batch {} of {}. Average loss over past 200 batches: {:0.3f}'.format(batch + 1, num_batches, cum_loss/200))
+                if (batch + 1) % 400 == 0:
+                    msg = 'Batch {} of {}. Avg loss past 400 batches: {:0.3f}'.format(batch + 1, num_batches, cum_loss/400)
+		    print(msg)
+		    logger.info(msg)
                     cum_loss = 0
-            logger.info('Finished epoch {}\n'.format(epoch+1))
-            all_refs, all_candidates, all_targets = generate_batch(data, np.random.choice(5), int(len(data)/5))
+            all_refs, all_candidates, all_targets = generate_batch(data, 0, len(data))
             acc_feed_dict = {t_ref: b_ref for t_ref, b_ref in zip(train_refs, all_refs)}
             acc_feed_dict.update({train_candidates: all_candidates, train_targets: all_targets})
-            logger.info('The accuracy on a random fifth of the training set is {:.1%}'.format(accuracy.eval(feed_dict=acc_feed_dict)))
+            msg = 'Done epoch {}. Accuracy on training set: {:.1%}'.format(epoch, accuracy.eval(feed_dict=acc_feed_dict))
+	    print(msg)
+	    logger.info(msg)
 
         saver.save(sess, '../models/lstm/model')
         logger.info('Training finished. Saved model')
@@ -183,7 +186,7 @@ def train(data, epochs = 2, batch_size = 64):
 
 if __name__ == "__main__":
     if os.path.exists('../train-data/data.csv'):
-        data = pd.read_csv('../train-data/data.csv').iloc[:300,:]
+        data = pd.read_csv('../train-data/data.csv')
     else:
         data = create_data()
 
