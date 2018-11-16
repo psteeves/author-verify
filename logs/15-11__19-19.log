@@ -1,0 +1,2 @@
+2018-11-15 19:19:50,360 : INFO : Done epoch 0. Accuracy on training set: 30.0%
+2018-11-15 19:19:51,038 : INFO : Training finished. Saved model

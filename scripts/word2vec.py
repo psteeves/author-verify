@@ -3,7 +3,7 @@ import numpy as np
 import collections
 import os
 import pickle
-from utils import easy_clean, get_all_words
+import utils
 from nltk.tokenize import RegexpTokenizer
 w_tokenizer = RegexpTokenizer('\w+')
 
@@ -64,16 +64,17 @@ def generate_batch(data, batch_num, size, window):
 
 
 def training_loop(data, vocab_size):
-    window_size = 2
-    embedding_size = 80
-    num_valid = 10    # Num words to use for validation
+    logger = utils.configure_logger(modelname = 'word2vec')
+    window_size = 3
+    embedding_size = 120
+    num_valid = 8    # Num words to use for validation
 
     graph = tf.Graph()
     with graph.as_default():
         train_inputs = tf.placeholder(tf.int32, shape = (None, 2*window_size))
         train_labels = tf.placeholder(tf.int32, shape = (None, 1))
 
-        valid_inputs = tf.constant(np.random.choice(np.arange(100)[1:], num_valid), dtype = tf.int32)    # Choose vlidation set out of all words except UNK
+        valid_inputs = tf.constant(np.random.choice(np.arange(200)[1:], num_valid), dtype = tf.int32)    # Choose vlidation set out of all words except UNK
 
         embeddings = tf.Variable(tf.random_uniform((vocab_size, embedding_size), -1.0, 1.0))
         embeds = tf.nn.embedding_lookup(embeddings, train_inputs)
@@ -91,8 +92,8 @@ def training_loop(data, vocab_size):
         sim = tf.matmul(valid_embeds, tf.transpose(norm_embeds))    # Similarity between validation set and other embeddings
 
 
-    epochs = 20
-    batch_size = 256
+    epochs = 25
+    batch_size = 512
     num_batches = len(data) // (2*window_size + batch_size)
     num_near = 5
     print(num_batches)
@@ -100,32 +101,31 @@ def training_loop(data, vocab_size):
         tf.global_variables_initializer().run()
         avg_loss = 0
         for epoch in range(epochs):
+            data = data.sample(frac=1)
             for batch in range(num_batches):
                 batch_inputs, batch_labels = generate_batch(data, batch, batch_size, window_size)
                 feed_dict = {train_inputs : batch_inputs, train_labels : batch_labels}
                 _, l = sess.run([optimizer, loss], feed_dict=feed_dict)
                 avg_loss += l
                 if (batch + 1) % 1000 == 0:
-                    print('Batch {} of {}. Average loss over past 1000 batches: {:0.3f}'.format(batch + 1, num_batches, avg_loss/1000))
+                    logger.info('Batch {} of {}. Average loss over past 1000 batches: {:0.3f}'.format(batch + 1, num_batches, avg_loss/1000))
                     avg_loss = 0
 
-            print('\nFinished epoch {}'.format(epoch+1))
-            print('Let us take a look at some common words and their neighbours:')
+            logger.info('Done epoch {}. Some common words and their neighbours:')
             similarity = sim.eval()
             for i in range(num_valid):
                 valid_word = valid_inputs.eval()[i]
                 nearest = (-similarity[i,:]).argsort()[1:num_near+1]
-                print('{}: {}'.format(index_word_map[valid_word], [index_word_map[w] for w in nearest]))
-            print('\n\n')
+                logger.info('{}: {}\n'.format(index_word_map[valid_word], [index_word_map[w] for w in nearest]))
 
         pickle.dump(embeddings.eval(), open('../models/embeddings','wb'))
 
 
 if __name__ == "__main__":
-    #words = get_all_words().split()
-    with open('../train-data/all_text.txt') as f:
-        words = f.read().split()
-    vocab_size = 15000
+    words = utils.get_all_words().split()
+    #with open('../train-data/all_text.txt') as f:
+    #    words = f.read().split()
+    vocab_size = 50000
     word_index_map, index_word_map, data, _ = create_data(words, vocab_size)
     pickle.dump(word_index_map, open('../models/dictionary', 'wb'))
     training_loop(data, vocab_size)

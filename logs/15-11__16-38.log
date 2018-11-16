@@ -1,7 +1,0 @@
-2018-11-15 16:38:33,819 : INFO : Finished epoch 1
-
-2018-11-15 16:38:34,627 : INFO : The accuracy on a random fifth of the training set is 30.0%
-2018-11-15 16:38:38,617 : INFO : Finished epoch 2
-
-2018-11-15 16:38:39,206 : INFO : The accuracy on a random fifth of the training set is 68.3%
-2018-11-15 16:38:39,610 : INFO : Training finished. Saved model

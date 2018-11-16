@@ -1,7 +1,6 @@
-image: tf-gpu
-command: ["python", "lstm.py"]
-name: pat_author_verify
-reqCores: 4
+image: images.borgy.elementai.lan/psteeves/authors-stacked
+reqCores: 1
 reqGpus: 1
-reqRamGbytes: 32
-volumes: -/mnt/home/psteeves/author-verify:/mnt/home/author-verify
+reqRamGbytes: 8
+volumes:
+  - /mnt/home/psteeves/author-verify:/mnt/home/author-verify
