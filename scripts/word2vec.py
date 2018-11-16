@@ -96,7 +96,6 @@ def training_loop(data, vocab_size):
     batch_size = 512
     num_batches = len(data) // (2*window_size + batch_size)
     num_near = 5
-    print(num_batches)
     with tf.Session(graph = graph) as sess:
         tf.global_variables_initializer().run()
         avg_loss = 0
