@@ -6,5 +6,4 @@ RUN mkdir -p /mnt/home/author-verify
 WORKDIR /mnt/home/author-verify/scripts
 
 #CMD bash
-CMD ["python", "word2vec.py"]
-
+CMD ["python", "lstm.py"]

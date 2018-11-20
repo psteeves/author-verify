@@ -1,7 +1,6 @@
 import os
 from copy import copy
-import utils
-import datetime
+from utils import configure_logger, clean
 import tensorflow as tf
 import pandas as pd
 import numpy as np
@@ -40,7 +39,8 @@ def create_data(min_words = sequence_length, num_refs = num_refs, verbose = Fals
         for text in all_texts:
             with open(os.path.join(parent_dir,author,text)) as f:
                 content = f.read()
-                wc = len(w_tokenizer.tokenize(content))
+                cleaned_content = clean(content)
+                wc = len(w_tokenizer.tokenize(cleaned_content))
                 if wc > min_words:
                     long_texts.append(text)
         texts[author] = long_texts
@@ -49,7 +49,7 @@ def create_data(min_words = sequence_length, num_refs = num_refs, verbose = Fals
         for text in texts[author]:
             references = copy(texts[author])
             references.remove(text)
-            for _ in range(4):
+            for _ in range(5):
                 chosen_refs = np.random.choice(references, num_refs, replace=False)
                 candidate = [os.path.join(author, text)]
                 hit = [author] + list(map(lambda x: os.path.join(author, x), chosen_refs)) + candidate + [1]
@@ -77,7 +77,8 @@ def create_data(min_words = sequence_length, num_refs = num_refs, verbose = Fals
 def process_file(filename, window = sequence_length):
     with open(os.path.join('../data/Reuters-50', filename)) as f:
         content = f.read().lower()
-        words = w_tokenizer.tokenize(content)
+        cleaned_content = clean(content)
+        words = w_tokenizer.tokenize(cleaned_content)
         wc = len(words)
         start = np.random.choice(wc - window)
 
@@ -107,7 +108,7 @@ def get_accuracy(outs, labels):
 
 
 def train(data, epochs = 10, batch_size = 64):
-    logger = utils.configure_logger(modelname = 'lstm_train')
+    logger = configure_logger(modelname = 'lstm_train')
 
     graph = tf.Graph()
     with graph.as_default():
@@ -121,7 +122,7 @@ def train(data, epochs = 10, batch_size = 64):
         initializer = tf.initializers.truncated_normal()
 
         def lstm_cell(hidden_size):
-            return tf.contrib.rnn.BasicLSTMCell(hidden_size, activation = tf.nn.relu)
+            return tf.contrib.rnn.BasicLSTMCell(hidden_size, activation = tf.nn.sigmoid)
 
         stacked_lstm = tf.contrib.rnn.MultiRNNCell([lstm_cell(n) for n in lstm_num_units])
         LSTM_refs_outs = [tf.nn.dynamic_rnn(stacked_lstm, ref, dtype = tf.float32) for ref in refs_embed]
@@ -130,7 +131,8 @@ def train(data, epochs = 10, batch_size = 64):
         last_states_refs = [LSTM_out[1][len(lstm_num_units)-1].h for LSTM_out in LSTM_refs_outs]
         mean_states_refs = tf.reduce_mean(last_states_refs, axis = 0)
         last_states_candidate = LSTM_candidate_outs[1][len(lstm_num_units)-1].h
-        all_states = tf.concat([mean_states_refs, last_states_candidate], axis = 1)
+        #all_states = tf.concat([mean_states_refs, last_states_candidate], axis = 1)
+        all_states = mean_states_refs - last_states_candidate
 
         layer1 = tf.layers.dense(all_states, 256, kernel_initializer = initializer, activation = tf.nn.relu)
         layer2 = tf.layers.dense(layer1, 64, kernel_initializer = initializer, activation = tf.nn.relu)
@@ -142,6 +144,7 @@ def train(data, epochs = 10, batch_size = 64):
         capped_gvs = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in gvs]
         train_op = optimizer.apply_gradients(capped_gvs)
 
+        preds = tf.round(tf.sigmoid(outputs))
         accuracy = get_accuracy(outputs, train_targets)
 
         saver = tf.train.Saver()
@@ -164,14 +167,13 @@ def train(data, epochs = 10, batch_size = 64):
                     print(msg)
                     logger.info(msg)
                     cum_loss = 0
-            all_refs, all_candidates, all_targets = generate_batch(data, np.random.choice(5), int(len(data)/5))
+            all_refs, all_candidates, all_targets = generate_batch(data, np.random.choice(8), int(len(data)/8))
             acc_feed_dict = {t_ref: b_ref for t_ref, b_ref in zip(train_refs, all_refs)}
             acc_feed_dict.update({train_candidates: all_candidates, train_targets: all_targets})
-            msg = 'Done epoch {}. Accuracy on random fifth of training set: {:.1%}'.format(epoch, accuracy.eval(feed_dict=acc_feed_dict))
+            msg = 'Done epoch {}. Accuracy on random eigth of training set: {:.1%}'.format(epoch, accuracy.eval(feed_dict=acc_feed_dict))
             print(msg)
             logger.info(msg)
-
-        saver.save(sess, '../models/lstm/model')
+            saver.save(sess, '../models/lstm/model')
         logger.info('Training finished. Saved model')
 
 
@@ -181,4 +183,4 @@ if __name__ == "__main__":
     else:
         data = create_data()
 
-    train(data, epochs = 10)
+    train(data, epochs = 8)
