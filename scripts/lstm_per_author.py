@@ -104,7 +104,7 @@ def forward_pass(embeds, hand_features):
 
 
 def train(author, train_data, valid_data, test_data, epochs = 10, batch_size = 64, return_results = False):
-    logger = configure_logger(modelname = 'lstm_'+author, level=30)
+    logger = configure_logger(modelname = 'lstm_'+author, level=10)
 
     graph = tf.Graph()
     with graph.as_default():
@@ -173,7 +173,7 @@ def train(author, train_data, valid_data, test_data, epochs = 10, batch_size = 6
 
 def run_model(author):
     train_data, valid_data, test_data = create_data(author, split = [0.7, 0.85])
-    output = train(author, train_data, valid_data, test_data, epochs = 120, return_results = True)
+    output = train(author, train_data, valid_data, test_data, epochs = 20, return_results = True)
     return output
 
 if __name__ == "__main__":
