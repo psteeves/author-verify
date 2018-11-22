@@ -37,7 +37,29 @@ def get_all_words():
     return all_text
 
 
-def configure_logger(modelname, level=logging.INFO):
+def get_words_author(author):
+    parent = '../data/Reuters-50/'
+    text = ''
+    for file in os.listdir(os.path.join(parent, author)):
+        with open(os.path.join(parent, author, file), 'r') as f:
+            text += clean(f.read())
+    return text
+
+
+def author_embeddings():
+    parent = '../data/Reuters-50/'
+    authors = os.listdir(parent)
+    embeddings = pickle.load(open('../models/embeddings', 'rb'))
+    author_embeds = {}
+    words = {}
+    for author in authors:
+        text = get_words_author(author)
+        words = w_tokenizer.tokenize(text)
+        author_embeds[author] = np.stack([embeddings[dic.get(w, 0)] for w in words]).mean(axis = 0)
+    return author_embeds
+
+
+def configure_logger(modelname, level=20):
     formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(message)s')
     logger = logging.getLogger(modelname)
     logger.setLevel(level)
@@ -48,5 +70,4 @@ def configure_logger(modelname, level=logging.INFO):
     fh.setLevel(logging.INFO)
     fh.setFormatter(formatter)
     logger.addHandler(fh)
-
     return logger

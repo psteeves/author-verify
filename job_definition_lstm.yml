@@ -1,4 +1,4 @@
-image: images.borgy.elementai.lan/psteeves/lstm-authors
+image: images.borgy.elementai.lan/psteeves/lstm-per-author
 reqCores: 1
 reqGpus: 1
 reqRamGbytes: 8
