@@ -180,7 +180,7 @@ def train(author, train_data, valid_data, test_data, epochs = 10, batch_size = 6
         if return_results:
             return {'Test accuracy': test_acc}
 
-def run_model(author):
+def run_model():
     split = [0.7, 0.85]
     if os.path.exists('../train-data/data.csv'):
         data = pd.read_csv('../train-data/data.csv')
@@ -192,6 +192,6 @@ def run_model(author):
     return output
 
 if __name__ == "__main__":
-    output = run_model('ScottHillis')
+    output = run_model()
 
 

@@ -80,32 +80,28 @@ def generate_batch(data, batch_num, size):
     return refs, candidates, targets
 
 
-def get_accuracy(outs, labels):
-    sigmoids = tf.sigmoid(outs)
-    preds = tf.round(sigmoids)
+def get_accuracy(refs_outs, candidates_out, margin, labels):
+    dist = tf.sqrt(tf.reduce_sum(tf.square(refs_out - candidates_out), 1))
+    preds = tf.cast(tf.less(dist, margin), tf.float32)
     score = tf.equal(preds, labels)
     accuracy = tf.reduce_mean(tf.cast(score, tf.float32))
     return accuracy
 
 
-def forward_pass(ref_embeds, cand_embeds):
+def forward_pass(embeds):
     with tf.variable_scope(tf.get_variable_scope(),reuse=tf.AUTO_REUSE):
         initializer = tf.initializers.truncated_normal()
-        lstm_cell = tf.contrib.rnn.BasicLSTMCell(lstm_num_units, activation = tf.nn.tanh)
-        LSTM_outs_ref = tf.nn.dynamic_rnn(lstm_cell, ref_embeds, dtype = tf.float32)
-        LSTM_outs_cand = tf.nn.dynamic_rnn(lstm_cell, cand_embeds, dtype = tf.float32)
-        last_states_ref = LSTM_outs_ref[1].h
-        last_states_cand = LSTM_outs_cand[1].h
-        all_states = tf.concat([last_states_ref, last_states_cand], axis = 1)
-        mask = tf.layers.dense(last_states_ref, 2*sequence_length, kernel_initializer = initializer, activation = tf.nn.sigmoid)
-        post_mask = mask * all_states
-        drop0 = tf.nn.dropout(post_mask, 0.9)
+        stacked_lstm = tf.nn.rnn.MultiRNNCell([tf.contrib.rnn.BasicLSTMCell(lstm_num_units, activation = tf.nn.tanh) for _ in range(2)]
+        LSTM_outs = tf.nn.dynamic_rnn(stacked_lstm, embeds, dtype = tf.float32)
+        last_states = LSTM_outs[1].h
+        drop0 = tf.nn.dropout(last_states, 0.9)
         layer1 = tf.layers.dense(drop0, 128, kernel_initializer = initializer, activation = tf.nn.relu)
         drop1 = tf.nn.dropout(layer1, 0.8)
         layer2 = tf.layers.dense(drop1, 32, kernel_initializer = initializer, activation = tf.nn.relu)
         drop2 = tf.nn.dropout(layer2, 0.8)
         outputs = tf.layers.dense(drop2, 1, kernel_initializer = initializer, activation = None)
-    return outputs
+        outputs_norm = tf.math.l2_normalize(outputs, axis = 1)
+    return outputs_norm
 
 
 def train(author, train_data, valid_data, test_data, epochs = 10, batch_size = 64, return_results = False):
@@ -139,15 +135,17 @@ def train(author, train_data, valid_data, test_data, epochs = 10, batch_size = 6
         all_train_refs_embed = tf.nn.embeddings_lookup(embeddings, all_train_refs)
         all_train_targets = tf.constant(generate_batch(train_data, 0, len(train_data))[2], dtype=tf.float32)
 
-        outputs = forward_pass(train_refs_embed, train_candidates_embed)
-        loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=train_targets, logits=outputs))
+        refs_outputs = forward_pass(train_refs_embed)
+        candidates_outputs = forward_pass(train_candidates_embed)
+
+        margin = tf.constant(1.0)
+        loss = tf.contrib.losses.metric_learning.contrastive_loss(labels=train_targets, embeddings_anchor=refs_outputs, embeddings_positive=candidates_outputs, margin = margin)
         learning_rate = tf.placeholder(tf.float32, shape=[])
         optimizer = tf.train.AdamOptimizer(learning_rate).minimize(loss)
-        preds = tf.round(tf.sigmoid(outputs))
 
-        train_accuracy = get_accuracy(forward_pass(all_train_candidates_embed, all_train_hand_features), all_train_targets)
-        valid_accuracy = get_accuracy(forward_pass(valid_candidates_embed, valid_hand_features), valid_targets)
-        test_accuracy = get_accuracy(forward_pass(test_candidates_embed, test_hand_features), test_targets)
+        train_accuracy = get_accuracy(forward_pass(all_train_refs_embed), forward_pass(all_train_candidates_embed), margin, all_train_targets)
+        valid_accuracy = get_accuracy(forward_pass(valid_refs_embed), forward_pass(valid_candidates_embed), margin, valid_targets)
+        test_accuracy = get_accuracy(forward_pass(test_refs_embed), forward_pass(test_candidates_embed), margin, test_targets)
 
         saver = tf.train.Saver()
 
@@ -180,7 +178,7 @@ def train(author, train_data, valid_data, test_data, epochs = 10, batch_size = 6
         if return_results:
             return {'Test accuracy': test_acc}
 
-def run_model(author):
+def run_model():
     split = [0.7, 0.85]
     if os.path.exists('../train-data/data.csv'):
         data = pd.read_csv('../train-data/data.csv')
@@ -192,6 +190,6 @@ def run_model(author):
     return output
 
 if __name__ == "__main__":
-    output = run_model('ScottHillis')
+    output = run_model()
 
 
