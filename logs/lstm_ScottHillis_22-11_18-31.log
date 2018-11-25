@@ -157,3 +157,26 @@
 2018-11-22 18:34:30,196 : INFO : Batch 13 of 15. Loss: 1.051
 2018-11-22 18:34:31,089 : INFO : Batch 14 of 15. Loss: 0.762
 2018-11-22 18:34:31,918 : INFO : Batch 15 of 15. Loss: 1.403
+2018-11-22 18:34:35,524 : INFO : Done epoch 9. Validation accuracy: 76.9% Training accuracy: 83.7% 
+2018-11-22 18:34:36,349 : INFO : Batch 1 of 15. Loss: 0.709
+2018-11-22 18:34:37,169 : INFO : Batch 2 of 15. Loss: 0.777
+2018-11-22 18:34:38,004 : INFO : Batch 3 of 15. Loss: 1.572
+2018-11-22 18:34:38,865 : INFO : Batch 4 of 15. Loss: 0.735
+2018-11-22 18:34:39,689 : INFO : Batch 5 of 15. Loss: 0.853
+2018-11-22 18:34:40,507 : INFO : Batch 6 of 15. Loss: 0.963
+2018-11-22 18:34:41,316 : INFO : Batch 7 of 15. Loss: 0.915
+2018-11-22 18:34:42,156 : INFO : Batch 8 of 15. Loss: 1.574
+2018-11-22 18:34:42,992 : INFO : Batch 9 of 15. Loss: 0.573
+2018-11-22 18:34:43,815 : INFO : Batch 10 of 15. Loss: 1.414
+2018-11-22 18:34:44,624 : INFO : Batch 11 of 15. Loss: 0.873
+2018-11-22 18:34:45,438 : INFO : Batch 12 of 15. Loss: 0.820
+2018-11-22 18:34:46,251 : INFO : Batch 13 of 15. Loss: 0.729
+2018-11-22 18:34:47,058 : INFO : Batch 14 of 15. Loss: 0.841
+2018-11-22 18:34:47,869 : INFO : Batch 15 of 15. Loss: 0.698
+2018-11-22 18:34:51,474 : INFO : Done epoch 10. Validation accuracy: 78.4% Training accuracy: 84.9% 
+2018-11-22 18:34:52,299 : INFO : Batch 1 of 15. Loss: 0.745
+2018-11-22 18:34:53,118 : INFO : Batch 2 of 15. Loss: 1.078
+2018-11-22 18:34:53,964 : INFO : Batch 3 of 15. Loss: 1.038
+2018-11-22 18:34:54,836 : INFO : Batch 4 of 15. Loss: 1.883
+2018-11-22 18:34:55,685 : INFO : Batch 5 of 15. Loss: 1.357
+2018-11-22 18:34:56,520 : INFO : Batch 6 of 15. Loss: 1.192

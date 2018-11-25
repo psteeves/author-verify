@@ -1,0 +1,9 @@
+Train LSTM per author instead of general one
+Add dropout
+Lower learning rate and increase epochs
+Regex for years, dollars, nums
+Try different sequence_lengths
+Add features that LSTM can't see because of embeddings: avg word length, unique ratio of words (not there cuz UNK words)
+
+https://web.stanford.edu/class/cs224n/reports/2760185.pdf
+Work done with dataset and author Id and verify
