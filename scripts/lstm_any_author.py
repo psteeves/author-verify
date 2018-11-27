@@ -4,6 +4,7 @@ from utils import configure_logger, clean
 import tensorflow as tf
 import pandas as pd
 import numpy as np
+import ast
 import pickle
 from nltk.tokenize import RegexpTokenizer
 w_tokenizer = RegexpTokenizer('\w+')
@@ -18,20 +19,25 @@ dic = pickle.load(open('../models/dictionary', 'rb'))
 stored_embeddings = pickle.load(open('../models/embeddings', 'rb'))
 
 def validate_text_lengths(min_words = sequence_length):
+    parent_dir = '../data/Reuters-50'
+    authors = os.listdir(parent_dir)
     long_texts = {}
     for author in authors:
+        long_texts[author] = []
         for text in os.listdir(os.path.join(parent_dir, author)):
             with open(os.path.join(parent_dir, author, text)) as f:
                 content = f.read()
                 cleaned_content = clean(content)
                 words = w_tokenizer.tokenize(cleaned_content)
                 if len(words) > min_words:
-                    long_texts[author].append(words)
-    
+                    start = np.random.choice(len(words) - min_words)
+                    sample = words[start : start + min_words]
+                    idx = list(map(lambda x: dic.get(x, 0), sample))
+                    long_texts[author].append(idx)
     return long_texts
 
 
-def create_data(split = [0.7,0.85], min_words = sequence_length, dups = 2, verbose = False):
+def create_data(split = [0.7,0.85], min_words = sequence_length, dups = 3, verbose = False):
     """
     Input:
         min_words: min words in article for it to be in data
@@ -39,31 +45,33 @@ def create_data(split = [0.7,0.85], min_words = sequence_length, dups = 2, verbo
     Output: CSV file containing filenames of texts to serve as features and labels corresponding to whether a candidate is from the same author
     """
 
-    parent_dir = '../data/Reuters-50'
-    authors = os.listdir(parent_dir)
-    count = len(authors)
     c = 0
 
     data = pd.DataFrame({}, columns = ['author', 'ref', 'candidate', 'target'])
     long_texts = validate_text_lengths()
+    authors = long_texts.keys()
     for author in authors:
         texts = long_texts[author]
         for text in texts:
             for i in range(dups):
                 candidate = text
-                ref = np.random.choice(list(set(texts) - set(candidate)))
+                options = copy(texts)
+                options.remove(text)
+                ref = options[np.random.choice(len(options))]
                 hit = dict(zip(data.columns, [author, ref, candidate, 1]))
-                data.append(hit, ignore_index=True)
+                data = data.append(hit, ignore_index=True)
 
         for other_author in list(set(authors) - set(author)):
             for i in range(2*dups):
-                ref = np.random.choice(texts)
-                candidate = np.random.choice(long_texts[other_author])
+                ref = texts[np.random.choice(len(texts))]
+                candidate = long_texts[other_author][np.random.choice(len(long_texts[other_author]))]
                 miss = dict(zip(data.columns, [author, ref, candidate, 0]))
-                data.append(miss, ignore_index=True)
+                data = data.append(miss, ignore_index=True)
+        print('Done author ', c)
+        c+=1
 
     data = data.sample(frac=1)
-    data.to_csv('../train-data/data.csv')
+    data.to_csv('../train-data/data.csv', index=False)
     valid_split, test_split = int(split[0]*len(data)), int(split[1]*len(data))
 
     train_data = data.iloc[:valid_split,:]
@@ -97,7 +105,7 @@ def forward_pass(ref_embeds, cand_embeds):
         last_states_ref = LSTM_outs_ref[1].h
         last_states_cand = LSTM_outs_cand[1].h
         all_states = tf.concat([last_states_ref, last_states_cand], axis = 1)
-        mask = tf.layers.dense(last_states_ref, 2*sequence_length, kernel_initializer = initializer, activation = tf.nn.sigmoid)
+        mask = tf.layers.dense(last_states_ref, tf.shape(all_states)[1], kernel_initializer = initializer, activation = tf.nn.sigmoid)
         post_mask = mask * all_states
         drop0 = tf.nn.dropout(post_mask, 0.9)
         layer1 = tf.layers.dense(drop0, 128, kernel_initializer = initializer, activation = tf.nn.relu)
@@ -108,8 +116,8 @@ def forward_pass(ref_embeds, cand_embeds):
     return outputs
 
 
-def train(author, train_data, valid_data, test_data, epochs = 10, batch_size = 64, return_results = False):
-    logger = configure_logger(modelname = 'lstm_'+author, level=10)
+def train(train_data, valid_data, test_data, epochs = 10, batch_size = 64, return_results = False):
+    logger = configure_logger(modelname = 'lstm_any_author', level=10)
 
     graph = tf.Graph()
     with graph.as_default():
@@ -117,14 +125,14 @@ def train(author, train_data, valid_data, test_data, epochs = 10, batch_size = 6
 
         train_candidates = tf.placeholder(tf.int32, shape = (None, sequence_length))
         train_candidates_embed = tf.nn.embedding_lookup(embeddings, train_candidates)
-        train_refs = tf.placeholder(tf.float32, shape = (None, sequence_length))
+        train_refs = tf.placeholder(tf.int32, shape = (None, sequence_length))
         train_refs_embed = tf.nn.embedding_lookup(embeddings, train_refs)
         train_targets = tf.placeholder(tf.float32, shape = (None,1))
 
         valid_candidates = tf.constant(generate_batch(valid_data, 0, len(valid_data))[0], dtype=tf.int32)
         valid_candidates_embed = tf.nn.embedding_lookup(embeddings, valid_candidates)
         valid_refs = tf.constant(generate_batch(valid_data, 0 , len(valid_data))[1], dtype = tf.int32)
-        valid_refs_embed = tf.nn.embeddings_lookup(embeddings, valid_refs)
+        valid_refs_embed = tf.nn.embedding_lookup(embeddings, valid_refs)
         valid_targets = tf.constant(generate_batch(valid_data, 0, len(valid_data))[2], dtype=tf.float32)
 
         test_candidates = tf.constant(generate_batch(test_data, 0, len(test_data))[0], dtype=tf.int32)
@@ -135,8 +143,8 @@ def train(author, train_data, valid_data, test_data, epochs = 10, batch_size = 6
 
         all_train_candidates = tf.constant(generate_batch(train_data, 0, len(train_data))[0], dtype=tf.int32)
         all_train_candidates_embed = tf.nn.embedding_lookup(embeddings, all_train_candidates)
-        all_train_refs = tf.constant(generate_batch(train_data, 0, len(train_data))[1], dtype=tf.float32)
-        all_train_refs_embed = tf.nn.embeddings_lookup(embeddings, all_train_refs)
+        all_train_refs = tf.constant(generate_batch(train_data, 0, len(train_data))[1], dtype=tf.int32)
+        all_train_refs_embed = tf.nn.embedding_lookup(embeddings, all_train_refs)
         all_train_targets = tf.constant(generate_batch(train_data, 0, len(train_data))[2], dtype=tf.float32)
 
         outputs = forward_pass(train_refs_embed, train_candidates_embed)
@@ -168,6 +176,7 @@ def train(author, train_data, valid_data, test_data, epochs = 10, batch_size = 6
             msg = 'Done epoch {}. '.format(epoch)
             msg += 'Validation accuracy: {:.1%} '.format(valid_acc)
             msg += 'Training accuracy: {:.1%} '.format(train_accuracy.eval())
+            print(msg)
             logger.info(msg)
             if valid_acc > best_acc:
                 saver.save(sess, '../models/lstm-any-author/model')
@@ -184,14 +193,13 @@ def run_model():
     split = [0.7, 0.85]
     if os.path.exists('../train-data/data.csv'):
         data = pd.read_csv('../train-data/data.csv')
+        data.iloc[:,1:-1] = data.iloc[:,1:-1].applymap(ast.literal_eval)
         valid_split, test_split = int(split[0]*len(data)), int(split[1]*len(data))
         train_data, valid_data, test_data = data.iloc[:valid_split, :], data.iloc[valid_split:test_split, :], data.iloc[test_split:, :]
     else:
         train_data, valid_data, test_data = create_data(author, split = split)
-    output = train(author, train_data, valid_data, test_data, epochs = 20, return_results = True)
+    output = train(train_data, valid_data, test_data, epochs = 3, return_results = True)
     return output
 
 if __name__ == "__main__":
     output = run_model()
-
-

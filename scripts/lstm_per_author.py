@@ -29,10 +29,6 @@ def create_data(chosen_author, split = [0.7,0.85], min_words = sequence_length, 
     if chosen_author not in authors:
         raise ValueError('Author not found')
 
-    count = len(authors)
-    c = 0
-
-    # Discard texts shorter than min length. Do first seperately so we don't have to check length again when choosing candidates from other authors
     data = pd.DataFrame({}, columns = ['author', 'file', 'words', 'avg_w_len', 'unique_w_ratio', 'pos', 'target'])
 
     for author in authors:
