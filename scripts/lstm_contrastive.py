@@ -12,13 +12,24 @@ w_tokenizer = RegexpTokenizer('\w+')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 sequence_length = 250
-overlap = 0
 lstm_num_units = 1024
 
 dic = pickle.load(open('../models/dictionary', 'rb'))
 stored_embeddings = pickle.load(open('../models/embeddings', 'rb'))
 
-def validate_text_lengths(min_words = sequence_length):
+
+def balance_classes(data):
+    positives = data[data.target == 1]
+    negatives = data[data.target == 0]
+    max_len = min(len(positives), len(negatives))
+
+    neg_subsample = negatives.sample(n = max_len)
+    pos_subsample = positives.sample(n = max_len)
+    balanced = pd.concat([neg_subsample, pos_subsample]).sample(frac=1).reset_index(drop=True)
+    return balanced
+
+
+def validate_text_lengths(min_words):
     parent_dir = '../data/Reuters-50'
     authors = os.listdir(parent_dir)
     long_texts = {}
@@ -37,56 +48,61 @@ def validate_text_lengths(min_words = sequence_length):
     return long_texts
 
 
-def create_data(split = [0.7,0.85], min_words = sequence_length, dups = 3, verbose = False):
+def create_data(num_authors, split = [0.7,0.85], min_words = sequence_length, replace=True):
     """
     Input:
         min_words: min words in article for it to be in data
         num_refs: number of texts to use as references to compare to candidate text
     Output: CSV file containing filenames of texts to serve as features and labels corresponding to whether a candidate is from the same author
     """
+    path = '../train-data/data_' + str(num_authors) + '.csv'
+    if replace:
+        c = 0
 
-    c = 0
-
-    data = pd.DataFrame({}, columns = ['author', 'ref_words', 'ref_file', 'other_author', 'cand_words', 'cand_file', 'target'])
-    long_texts = validate_text_lengths()
-    authors = list(long_texts.keys())[:30]
-    for author in authors:
-        texts = long_texts[author]
-        for text in texts:
-            for i in range(dups):
-                candidate = text
-                cand_words = candidate[0]
-                cand_file = candidate[1]
-                options = copy(texts)
+        data = pd.DataFrame({}, columns = ['author', 'ref_words', 'ref_file', 'other_author', 'cand_words', 'cand_file', 'target'])
+        long_texts = validate_text_lengths(min_words)
+        print('Done validating texts')
+        authors = list(np.random.choice(list(long_texts.keys()), num_authors))
+        other_authors = copy(authors)
+        for author in authors:
+            other_authors.remove(author)
+            options = copy(long_texts[author])
+            for text in long_texts[author]:
                 options.remove(text)
-                ref = options[np.random.choice(len(options))]
-                ref_words = ref[0]
-                ref_file = ref[1]
-                hit = dict(zip(data.columns, [author, ref_words, ref_file, author, cand_words, cand_file, 1]))
-                data = data.append(hit, ignore_index=True)
+                ref_words = text[0]
+                ref_file = text[1]
+                for option in options:
+                    cand_words = option[0]
+                    cand_file = option[1]
+                    hit = dict(zip(data.columns, [author, ref_words, ref_file, author, cand_words, cand_file, 1]))
+                    data = data.append(hit, ignore_index=True)
 
-        for other_author in list(set(authors) - set([author])):
-            for i in range(5*dups):
-                ref = texts[np.random.choice(len(texts))]
-                ref_words = ref[0]
-                ref_file = ref[1]
-                candidate = long_texts[other_author][np.random.choice(len(long_texts[other_author]))]
-                cand_words = candidate[0]
-                cand_file = candidate[1]
-                miss = dict(zip(data.columns, [author, ref_words, ref_file, other_author, cand_words, cand_file, 0]))
-                data = data.append(miss, ignore_index=True)
-        print('Done author ', c)
-        c+=1
+                for other_author in other_authors:
+                    cands = [long_texts[other_author][i] for i in np.random.choice(len(long_texts[other_author]), 3, replace=False)]
+                    for cand in cands:
+                        cand_words = cand[0]
+                        cand_file = cand[1]
+                        miss = dict(zip(data.columns, [author, ref_words, ref_file, other_author, cand_words, cand_file, 0]))
+                        data = data.append(miss, ignore_index=True)
+            print('Done author ', c)
+            c+=1
 
-    data = data.sample(frac=1)
-    data.to_csv('../train-data/data.csv', index=False)
+        data = data.sample(frac=1)
+        data = balance_classes(data)
+        data.to_csv(path, index=False)
+
+    else:
+        if os.path.exists(path):
+            data = pd.read_csv(path)
+            data.loc[:,['ref_words', 'cand_words']] = data.loc[:,['ref_words', 'cand_words']].applymap(ast.literal_eval)
+        else:
+            raise ValueError('Data file {} not found'.format(path))
+
     valid_split, test_split = int(split[0]*len(data)), int(split[1]*len(data))
-
     train_data = data.iloc[:valid_split,:]
     valid_data = data.iloc[valid_split:test_split,:]
     test_data = data.iloc[test_split:,:]
     return train_data, valid_data, test_data
-
 
 
 def generate_batch(data, batch_num, size):
@@ -116,11 +132,11 @@ def forward_pass(embeds):
         layer1 = tf.layers.dense(drop0, 512, kernel_initializer = initializer, activation = tf.nn.relu)
         drop1 = tf.nn.dropout(layer1, 1)
         outputs = tf.layers.dense(drop1, 128, kernel_initializer = initializer, activation = tf.nn.relu)
-        outputs_norm = tf.nn.l2_normalize(outputs, axis = 1)
+        #outputs_norm = tf.nn.l2_normalize(outputs, axis = 1)
     return outputs
 
 
-def train(train_data, valid_data, test_data, epochs = 10, batch_size = 64, return_results = False):
+def train(train_data, valid_data, test_data, epochs = 10, batch_size = 128, return_results = False):
     logger = configure_logger(modelname = 'lstm_contrastive', level=10)
 
     graph = tf.Graph()
@@ -207,19 +223,15 @@ def train(train_data, valid_data, test_data, epochs = 10, batch_size = 64, retur
         if return_results:
             return {'Test accuracy': test_acc}
 
-def run_model():
+
+def run_model(num_authors = 30):
+    print('Loading data')
     split = [0.7, 0.85]
-    if os.path.exists('../train-data/data.csv'):
-        data = pd.read_csv('../train-data/data.csv')
-        data.loc[:,['ref_words', 'cand_words']] = data.loc[:,['ref_words', 'cand_words']].applymap(ast.literal_eval)
-        valid_split, test_split = int(split[0]*len(data)), int(split[1]*len(data))
-        train_data, valid_data, test_data = data.iloc[:valid_split, :], data.iloc[valid_split:test_split, :], data.iloc[test_split:, :]
-    else:
-        train_data, valid_data, test_data = create_data(split = split)
-    print(train_data.target.mean())
-    print(len(train_data))
-    output = train(train_data, valid_data, test_data, epochs = 10, return_results = True)
+    train_data, valid_data, test_data = create_data(num_authors = num_authors, split = split, replace = False)
+    print('Data loaded')
+    output = train(train_data, valid_data, test_data, epochs = 20, return_results = True)
     return output
 
+
 if __name__ == "__main__":
-    output = run_model()
+    output = run_model(5)
