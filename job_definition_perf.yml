@@ -1,4 +1,4 @@
-image: images.borgy.elementai.lan/psteeves/authors-stacked
+image: images.borgy.elementai.lan/psteeves/lstm_performance
 reqCores: 1
 reqGpus: 1
 reqRamGbytes: 8

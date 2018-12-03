@@ -46,6 +46,26 @@ def get_words_author(author):
     return text
 
 
+def validate_text_lengths(min_words = 200):
+    parent_dir = '../data/Reuters-50'
+    authors = os.listdir(parent_dir)
+    long_texts = {}
+    for author in authors:
+        long_texts[author] = []
+        for text in os.listdir(os.path.join(parent_dir, author)):
+            with open(os.path.join(parent_dir, author, text)) as f:
+                content = f.read()
+                cleaned_content = clean(content)
+                words = w_tokenizer.tokenize(cleaned_content)
+                if len(words) > min_words:
+                    start = np.random.choice(len(words) - min_words)
+                    sample = words[start : start + min_words]
+                    idx = list(map(lambda x: dic.get(x, 0), sample))
+                    long_texts[author].append((idx, text))
+    pickle.dump(long_texts, open('../models/long_texts','wb'))
+    return long_texts
+
+
 def author_embeddings():
     parent = '../data/Reuters-50/'
     authors = os.listdir(parent)
@@ -65,7 +85,7 @@ def configure_logger(modelname, level=20):
     logger.setLevel(level)
 
     now = datetime.datetime.now()
-    fname = modelname +'_' + str(now.day) + '-' + str(now.month) + '_' + str(now.hour) + '-' + str(now.minute) + '.log'
+    fname = modelname +'_' + str(now.day) + '-' + str(now.month) + '.log'
     fh = logging.FileHandler(os.path.join('../logs', fname))
     fh.setLevel(logging.INFO)
     fh.setFormatter(formatter)

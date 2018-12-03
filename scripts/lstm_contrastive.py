@@ -11,9 +11,9 @@ w_tokenizer = RegexpTokenizer('\w+')
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-sequence_length = 250
+sequence_length = 200
 overlap = 0
-lstm_num_units = 1024
+lstm_num_units = 512
 
 dic = pickle.load(open('../models/dictionary', 'rb'))
 stored_embeddings = pickle.load(open('../models/embeddings', 'rb'))
@@ -30,25 +30,6 @@ def balance_classes(data):
     return balanced
 
 
-def validate_text_lengths(min_words = sequence_length):
-    parent_dir = '../data/Reuters-50'
-    authors = os.listdir(parent_dir)
-    long_texts = {}
-    for author in authors:
-        long_texts[author] = []
-        for text in os.listdir(os.path.join(parent_dir, author)):
-            with open(os.path.join(parent_dir, author, text)) as f:
-                content = f.read()
-                cleaned_content = clean(content)
-                words = w_tokenizer.tokenize(cleaned_content)
-                if len(words) > min_words:
-                    start = np.random.choice(len(words) - min_words)
-                    sample = words[start : start + min_words]
-                    idx = list(map(lambda x: dic.get(x, 0), sample))
-                    long_texts[author].append((idx, text))
-    return long_texts
-
-
 def create_data(num_authors, split = [0.7,0.85], min_words = sequence_length, replace=True):
     """
     Input:
@@ -61,9 +42,8 @@ def create_data(num_authors, split = [0.7,0.85], min_words = sequence_length, re
         c = 0
 
         data = pd.DataFrame({}, columns = ['author', 'ref_words', 'ref_file', 'other_author', 'cand_words', 'cand_file', 'target'])
-        long_texts = validate_text_lengths(min_words)
-        print('Done validating texts')
-        authors = list(np.random.choice(list(long_texts.keys()), num_authors))
+        long_texts = pickle.load(open('../models/long_texts', 'rb'))
+        authors = list(np.random.choice(list(long_texts.keys()), num_authors, replace = False))
         other_authors = copy(authors)
         for author in authors:
             other_authors.remove(author)
@@ -79,7 +59,7 @@ def create_data(num_authors, split = [0.7,0.85], min_words = sequence_length, re
                     data = data.append(hit, ignore_index=True)
 
                 for other_author in other_authors:
-                    cands = [long_texts[other_author][i] for i in np.random.choice(len(long_texts[other_author]), 3, replace=False)]
+                    cands = [long_texts[other_author][i] for i in np.random.choice(len(long_texts[other_author]), 5, replace=False)]
                     for cand in cands:
                         cand_words = cand[0]
                         cand_file = cand[1]
@@ -88,7 +68,6 @@ def create_data(num_authors, split = [0.7,0.85], min_words = sequence_length, re
             print('Done author ', c)
             c+=1
 
-        data = data.sample(frac=1)
         data = balance_classes(data)
         data.to_csv(path, index=False)
 
@@ -126,20 +105,27 @@ def get_accuracy(refs_out, candidates_out, threshold, labels):
 def forward_pass(embeds):
     with tf.variable_scope(tf.get_variable_scope(),reuse=tf.AUTO_REUSE):
         initializer = tf.initializers.truncated_normal()
-        stacked_lstm = tf.nn.rnn_cell.MultiRNNCell([tf.contrib.rnn.BasicLSTMCell(lstm_num_units, activation = tf.nn.tanh) for _ in range(2)])
-        #lstm_cell = tf.contrib.rnn.BasicLSTMCell(lstm_num_units, activation = tf.nn.tanh)
-        LSTM_outs = tf.nn.dynamic_rnn(stacked_lstm, embeds, dtype = tf.float32)
-        last_states = LSTM_outs[-1][1].h
-        drop0 = tf.nn.dropout(last_states, 1)
-        layer1 = tf.layers.dense(drop0, 512, kernel_initializer = initializer, activation = tf.nn.relu)
-        drop1 = tf.nn.dropout(layer1, 1)
-        outputs = tf.layers.dense(drop1, 128, kernel_initializer = initializer, activation = tf.nn.relu)
-        outputs_norm = tf.nn.l2_normalize(outputs, axis = 1)
+        seq_length = tf.ones([tf.shape(embeds)[0]], dtype = tf.int32) * 250
+
+        lstm_cell_fw = tf.nn.rnn_cell.LSTMCell(lstm_num_units, activation = tf.nn.tanh)
+        lstm_cell_bw = tf.nn.rnn_cell.LSTMCell(lstm_num_units, activation = tf.nn.tanh)
+        LSTM_outs = tf.nn.bidirectional_dynamic_rnn(lstm_cell_fw, lstm_cell_bw, embeds, sequence_length = seq_length, dtype = tf.float32)
+        final_states = [out.h for out in LSTM_outs[1]]
+        concat_states = tf.concat(final_states, axis = -1)
+
+        #drop0 = tf.nn.dropout(concat_states, 1)
+        layer1 = tf.layers.dense(concat_states, 1024, kernel_initializer = initializer, activation = tf.nn.relu)
+        batch_norm1 = tf.layers.batch_normalization(layer1)
+        #drop1 = tf.nn.dropout(layer1, 1)
+        layer2 = tf.layers.dense(batch_norm1, 512, kernel_initializer = initializer, activation = tf.nn.relu)
+        batch_norm2 = tf.layers.batch_normalization(layer2)
+        #drop2 = tf.nn.dropout(layer2, 1)
+        outputs =  tf.layers.dense(batch_norm2, 256, kernel_initializer = initializer, activation = tf.nn.relu)
     return outputs
 
 
-def train(train_data, valid_data, test_data, epochs = 10, batch_size = 64, return_results = False):
-    logger = configure_logger(modelname = 'lstm_contrastive', level=10)
+def train(num_authors, train_data, valid_data, test_data, epochs = 20, batch_size = 64, return_results = True):
+    logger = configure_logger(modelname = 'lstm_'+str(num_authors), level=10)
 
     graph = tf.Graph()
     with graph.as_default():
@@ -179,10 +165,12 @@ def train(train_data, valid_data, test_data, epochs = 10, batch_size = 64, retur
         d = tf.sqrt(tf.reduce_sum(tf.square(refs_outputs - candidates_outputs), 1, keepdims = True))
         loss = tf.reduce_mean(train_targets * d + (1. - train_targets) * tf.maximum(0., margin - d))
         #loss = tf.contrib.losses.metric_learning.contrastive_loss(labels=train_targets, embeddings_anchor=refs_outputs, embeddings_positive=candidates_outputs, margin = margin)
+
         learning_rate = tf.placeholder(tf.float32, shape=[])
+        clip = tf.placeholder(tf.float32, shape=[])
         optimizer = tf.train.AdamOptimizer(learning_rate)
         gvs = optimizer.compute_gradients(loss)
-        capped_gvs = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in gvs]
+        capped_gvs = [(tf.clip_by_value(grad, -clip, clip), var) for grad, var in gvs]
         train_op = optimizer.apply_gradients(capped_gvs)
 
         train_accuracy = get_accuracy(forward_pass(all_train_refs_embed), forward_pass(all_train_candidates_embed), threshold, all_train_targets)
@@ -197,15 +185,17 @@ def train(train_data, valid_data, test_data, epochs = 10, batch_size = 64, retur
         best_acc = 0
         for epoch in range(epochs):
             train_data = train_data.sample(frac=1)
+            cum_l = 0
             for batch in range(num_batches):
                 batch_candidates, batch_refs, batch_targets = generate_batch(train_data, batch, batch_size)
-                feed_dict = {train_candidates: batch_candidates, train_refs: batch_refs, train_targets: batch_targets, learning_rate: 0.001 * 0.97**epoch}
+                feed_dict = {train_candidates: batch_candidates, train_refs: batch_refs, train_targets: batch_targets, learning_rate: 0.0003 + 0.001 * 0.8**epoch, clip: 0.2 + 0.8 * 0.9**epoch}
                 _, l = sess.run([train_op, loss], feed_dict=feed_dict)
-                msg = 'Batch {} of {}. Loss: {:0.3f}'.format(batch + 1, num_batches, l)
-                logger.info(msg)
-                if np.isnan(l):
-                    print('Broken')
-                    break
+                cum_l += l
+                if (batch + 1) % 20 == 0:
+                    msg = 'Batch {} of {}. Avg loss over past 20 batches: {:0.3f}'.format(batch + 1, num_batches, cum_l/20)
+                    cum_l = 0
+                    logger.info(msg)
+
 
             valid_acc = valid_accuracy.eval()
             msg = 'Done epoch {}. '.format(epoch)
@@ -218,21 +208,25 @@ def train(train_data, valid_data, test_data, epochs = 10, batch_size = 64, retur
                 saver.save(sess, '../models/lstm-any-author/model')
                 best_acc = valid_acc
 
+            if best_acc > 0.95:
+                logger.info('Stopped early because of good performance')
+                break
+
     with tf.Session(graph=graph) as sess:
         saver.restore(sess, "../models/lstm-any-author/model")
         test_acc = test_accuracy.eval()
         logger.info('Test set accuracy: {:.1%} '.format(test_acc))
         if return_results:
-            return {'Test accuracy': test_acc}
+            return test_acc
 
 def run_model(num_authors = 5):
     print('Loading data')
-    split = [0.7, 0.85]
+    split = [0.8, 0.9]
     train_data, valid_data, test_data = create_data(num_authors = num_authors, split = split, replace = True)
     print('Data loaded')
-    output = train(train_data, valid_data, test_data, epochs = 10, return_results = True)
+    output = train(num_authors, train_data, valid_data, test_data, epochs = 30, return_results = True)
     return output
 
 
 if __name__ == "__main__":
-    output = run_model(5)
+    output = run_model(25)

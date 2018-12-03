@@ -11,3 +11,4 @@ Work done with dataset and author Id and verify
 
 images.borgy.elementai.lan/psteeves/lstm_any_author: contrastive loss
 images.borgy.elementai.lan/psteeves/lstm_per_author: 
+images.borgy.elementai.lan/psteeves/lstm_performance
