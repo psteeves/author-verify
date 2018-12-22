@@ -30,7 +30,7 @@ def balance_classes(data):
     return balanced
 
 
-def create_data(num_authors, split = [0.7,0.85], min_words = sequence_length, replace=True):
+def create_data(num_authors, spec_authors = None, split = [0.7,0.85], min_words = sequence_length, replace=True):
     """
     Input:
         min_words: min words in article for it to be in data
@@ -43,7 +43,10 @@ def create_data(num_authors, split = [0.7,0.85], min_words = sequence_length, re
 
         data = pd.DataFrame({}, columns = ['author', 'ref_words', 'ref_file', 'other_author', 'cand_words', 'cand_file', 'target'])
         long_texts = pickle.load(open('../models/long_texts', 'rb'))
-        authors = list(np.random.choice(list(long_texts.keys()), num_authors, replace = False))
+        if spec_authors:
+            authors = spec_authors
+        else:
+            authors = list(np.random.choice(list(long_texts.keys()), num_authors, replace = False))
         other_authors = copy(authors)
         for author in authors:
             other_authors.remove(author)
@@ -59,7 +62,7 @@ def create_data(num_authors, split = [0.7,0.85], min_words = sequence_length, re
                     data = data.append(hit, ignore_index=True)
 
                 for other_author in other_authors:
-                    cands = [long_texts[other_author][i] for i in np.random.choice(len(long_texts[other_author]), 5, replace=False)]
+                    cands = [long_texts[other_author][i] for i in np.random.choice(len(long_texts[other_author]), 20, replace=False)]
                     for cand in cands:
                         cand_words = cand[0]
                         cand_file = cand[1]
@@ -84,6 +87,14 @@ def create_data(num_authors, split = [0.7,0.85], min_words = sequence_length, re
     test_data = data.iloc[test_split:,:]
     return train_data, valid_data, test_data
 
+
+def create_test_set(complement = '../train-data/data_40.csv'):
+    comp_data = pd.read_csv(complement)
+    comp_authors = comp_data['author'].unique()
+    all_authors = os.listdir('../data/Reuters-50')
+    authors = list(set(all_authors) - set(comp_authors))
+    test_data, _, _ = create_data(num_authors = 5, spec_authors = authors, split = [1., 1.])
+    test_data.to_csv('../train-data/test_data.csv')
 
 
 def generate_batch(data, batch_num, size):
@@ -149,7 +160,7 @@ def train(num_authors, train_data, valid_data, test_data, epochs = 20, batch_siz
         test_refs_embed = tf.nn.embedding_lookup(embeddings, test_refs)
         test_targets = tf.constant(generate_batch(test_data, 0, len(test_data))[2], dtype=tf.float32)
 
-        train_subset = train_data.sample(frac = 0.4)
+        train_subset = train_data.sample(frac = 0.01)
         all_train_candidates = tf.constant(generate_batch(train_subset, 0, len(train_subset))[0], dtype=tf.int32)
         all_train_candidates_embed = tf.nn.embedding_lookup(embeddings, all_train_candidates)
         all_train_refs = tf.constant(generate_batch(train_subset, 0, len(train_subset))[1], dtype=tf.int32)
@@ -164,7 +175,6 @@ def train(num_authors, train_data, valid_data, test_data, epochs = 20, batch_siz
 
         d = tf.sqrt(tf.reduce_sum(tf.square(refs_outputs - candidates_outputs), 1, keepdims = True))
         loss = tf.reduce_mean(train_targets * d + (1. - train_targets) * tf.maximum(0., margin - d))
-        #loss = tf.contrib.losses.metric_learning.contrastive_loss(labels=train_targets, embeddings_anchor=refs_outputs, embeddings_positive=candidates_outputs, margin = margin)
 
         learning_rate = tf.placeholder(tf.float32, shape=[])
         clip = tf.placeholder(tf.float32, shape=[])
@@ -188,11 +198,11 @@ def train(num_authors, train_data, valid_data, test_data, epochs = 20, batch_siz
             cum_l = 0
             for batch in range(num_batches):
                 batch_candidates, batch_refs, batch_targets = generate_batch(train_data, batch, batch_size)
-                feed_dict = {train_candidates: batch_candidates, train_refs: batch_refs, train_targets: batch_targets, learning_rate: 0.0003 + 0.001 * 0.8**epoch, clip: 0.2 + 0.8 * 0.9**epoch}
+                feed_dict = {train_candidates: batch_candidates, train_refs: batch_refs, train_targets: batch_targets, learning_rate: 0.0002 + 0.0008 * 0.3**epoch, clip: 0.05 + 0.15 * 0.3**epoch}
                 _, l = sess.run([train_op, loss], feed_dict=feed_dict)
                 cum_l += l
-                if (batch + 1) % 20 == 0:
-                    msg = 'Batch {} of {}. Avg loss over past 20 batches: {:0.3f}'.format(batch + 1, num_batches, cum_l/20)
+                if (batch + 1) % 100 == 0:
+                    msg = 'Batch {} of {}. Avg loss over past 100 batches: {:0.3f}'.format(batch + 1, num_batches, cum_l/100)
                     cum_l = 0
                     logger.info(msg)
 
@@ -221,12 +231,12 @@ def train(num_authors, train_data, valid_data, test_data, epochs = 20, batch_siz
 
 def run_model(num_authors = 5):
     print('Loading data')
-    split = [0.8, 0.9]
-    train_data, valid_data, test_data = create_data(num_authors = num_authors, split = split, replace = True)
+    split = [0.98, 0.99]
+    train_data, valid_data, test_data = create_data(num_authors = num_authors, split = split, replace = False)
     print('Data loaded')
-    output = train(num_authors, train_data, valid_data, test_data, epochs = 30, return_results = True)
+    output = train(num_authors, train_data, valid_data, test_data, epochs = 20, return_results = True)
     return output
 
 
 if __name__ == "__main__":
-    output = run_model(25)
+    output = run_model(40)

@@ -4,7 +4,5 @@ logs/*
 data/*
 train-data/*
 .ipynb_checkpoints/*
-__pycache__/*
+*__pycache__*
 playground.ipynb
-scripts/__pycache__/*
-

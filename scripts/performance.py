@@ -3,7 +3,7 @@ import pickle
 
 
 def compare_num_authors():
-    qty = [8, 9, 10, 11, 12, 13, 14, 15]
+    qty = [30, 35, 40]
     results = {}
     for qt in qty:
         output = run_model(qt)
