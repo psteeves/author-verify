@@ -1,0 +1,6 @@
+image: images.borgy.elementai.lan/psteeves/authors_test_model
+reqCores: 1
+reqGpus: 4
+reqRamGbytes: 32
+volumes:
+  - /mnt/home/psteeves/author-verify:/mnt/home/author-verify

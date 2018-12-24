@@ -30,7 +30,7 @@ def balance_classes(data):
     return balanced
 
 
-def create_data(num_authors, spec_authors = None, split = [0.7,0.85], min_words = sequence_length, replace=True):
+def create_data(num_authors, spec_authors = None, split = 0.95, min_words = sequence_length, replace=True):
     """
     Input:
         min_words: min words in article for it to be in data
@@ -81,20 +81,21 @@ def create_data(num_authors, spec_authors = None, split = [0.7,0.85], min_words 
         else:
             raise ValueError('Data file {} not found'.format(path))
 
-    valid_split, test_split = int(split[0]*len(data)), int(split[1]*len(data))
+    valid_split = int(split*len(data))
     train_data = data.iloc[:valid_split,:]
-    valid_data = data.iloc[valid_split:test_split,:]
-    test_data = data.iloc[test_split:,:]
-    return train_data, valid_data, test_data
+    valid_data = data.iloc[valid_split:,:]
+    return train_data, valid_data
 
 
 def create_test_set(complement = '../train-data/data_40.csv'):
     comp_data = pd.read_csv(complement)
+    print('Read')
     comp_authors = comp_data['author'].unique()
     all_authors = os.listdir('../data/Reuters-50')
     authors = list(set(all_authors) - set(comp_authors))
     test_data, _, _ = create_data(num_authors = 5, spec_authors = authors, split = [1., 1.])
-    test_data.to_csv('../train-data/test_data.csv')
+    print('Test created. Writing...')
+    test_data.to_csv('../train-data/test_data.csv', index=False)
 
 
 def generate_batch(data, batch_num, size):
@@ -218,10 +219,6 @@ def train(num_authors, train_data, valid_data, test_data, epochs = 20, batch_siz
                 saver.save(sess, '../models/lstm-any-author/model')
                 best_acc = valid_acc
 
-            if best_acc > 0.95:
-                logger.info('Stopped early because of good performance')
-                break
-
     with tf.Session(graph=graph) as sess:
         saver.restore(sess, "../models/lstm-any-author/model")
         test_acc = test_accuracy.eval()
@@ -231,12 +228,13 @@ def train(num_authors, train_data, valid_data, test_data, epochs = 20, batch_siz
 
 def run_model(num_authors = 5):
     print('Loading data')
-    split = [0.98, 0.99]
-    train_data, valid_data, test_data = create_data(num_authors = num_authors, split = split, replace = False)
+    split = [0.95]
+    train_data, valid_data = create_data(num_authors = num_authors, split = split, replace = False)
     print('Data loaded')
     output = train(num_authors, train_data, valid_data, test_data, epochs = 20, return_results = True)
     return output
 
 
 if __name__ == "__main__":
-    output = run_model(40)
+    #output = run_model(40)
+    create_test_set()

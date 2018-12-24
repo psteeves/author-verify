@@ -6,4 +6,4 @@ RUN mkdir -p /mnt/home/author-verify
 WORKDIR /mnt/home/author-verify/scripts
 
 #CMD bash
-CMD ["python", "performance.py"]
+CMD ["python", "test_model.py"]
