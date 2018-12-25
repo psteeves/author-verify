@@ -1,6 +1,4 @@
-old.*
 models/*
-logs/*
 data/*
 train-data/*
 .ipynb_checkpoints/*

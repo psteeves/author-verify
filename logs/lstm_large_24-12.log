@@ -1,0 +1,151 @@
+2018-12-25 07:02:06,161 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 46.314
+2018-12-25 07:06:57,572 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 2.444
+2018-12-25 07:11:45,362 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 1.580
+2018-12-25 07:16:35,469 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 1.404
+2018-12-25 07:21:24,451 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 2.573
+2018-12-25 07:26:21,835 : INFO : Done epoch 0. Valid accuracy: 79.6% Train accuracy: 81.4% 
+2018-12-25 07:31:16,891 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 1.374
+2018-12-25 07:36:08,054 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 1.208
+2018-12-25 07:40:55,385 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 1.184
+2018-12-25 07:45:42,885 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 2.180
+2018-12-25 07:50:28,968 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 1.151
+2018-12-25 07:55:12,840 : INFO : Done epoch 1. Valid accuracy: 82.8% Train accuracy: 84.9% 
+2018-12-25 08:00:01,792 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 1.622
+2018-12-25 08:04:49,818 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 1.045
+2018-12-25 08:09:34,224 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 1.018
+2018-12-25 08:14:23,470 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 1.018
+2018-12-25 08:19:15,502 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.949
+2018-12-25 08:24:04,509 : INFO : Done epoch 2. Valid accuracy: 84.4% Train accuracy: 85.9% 
+2018-12-25 08:28:55,202 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.905
+2018-12-25 08:33:47,782 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.837
+2018-12-25 08:38:36,269 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.818
+2018-12-25 08:43:27,525 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.789
+2018-12-25 08:48:12,968 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.767
+2018-12-25 08:52:58,773 : INFO : Done epoch 3. Valid accuracy: 87.4% Train accuracy: 88.9% 
+2018-12-25 08:57:49,233 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 1.142
+2018-12-25 09:02:37,884 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.688
+2018-12-25 09:07:31,345 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.650
+2018-12-25 09:12:19,015 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.624
+2018-12-25 09:17:04,602 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 1.906
+2018-12-25 09:21:49,254 : INFO : Done epoch 4. Valid accuracy: 92.5% Train accuracy: 92.8% 
+2018-12-25 09:26:35,009 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.822
+2018-12-25 09:31:18,672 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.542
+2018-12-25 09:36:04,072 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.511
+2018-12-25 09:40:51,867 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.496
+2018-12-25 09:45:39,769 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.481
+2018-12-25 09:50:30,541 : INFO : Done epoch 5. Valid accuracy: 94.4% Train accuracy: 94.9% 
+2018-12-25 09:55:17,184 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.487
+2018-12-25 10:00:06,958 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.437
+2018-12-25 10:04:56,866 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.428
+2018-12-25 10:09:45,657 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.428
+2018-12-25 10:14:37,757 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.407
+2018-12-25 10:19:24,991 : INFO : Done epoch 6. Valid accuracy: 95.5% Train accuracy: 95.9% 
+2018-12-25 10:24:12,512 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.404
+2018-12-25 10:28:59,501 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.398
+2018-12-25 10:33:50,284 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.388
+2018-12-25 10:38:38,432 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.388
+2018-12-25 10:43:24,088 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.389
+2018-12-25 10:48:18,554 : INFO : Done epoch 7. Valid accuracy: 96.1% Train accuracy: 96.4% 
+2018-12-25 10:53:11,959 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.371
+2018-12-25 10:58:04,678 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.367
+2018-12-25 11:02:50,568 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.370
+2018-12-25 11:07:43,584 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.371
+2018-12-25 11:12:37,865 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.366
+2018-12-25 11:17:22,576 : INFO : Done epoch 8. Valid accuracy: 96.4% Train accuracy: 96.9% 
+2018-12-25 11:22:13,519 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.362
+2018-12-25 11:27:01,622 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.353
+2018-12-25 11:31:48,676 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.349
+2018-12-25 11:36:36,708 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.353
+2018-12-25 11:41:24,256 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.348
+2018-12-25 11:46:09,734 : INFO : Done epoch 9. Valid accuracy: 96.5% Train accuracy: 97.0% 
+2018-12-25 11:51:01,711 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.343
+2018-12-25 11:55:52,856 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.349
+2018-12-25 12:00:41,305 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.343
+2018-12-25 12:05:34,395 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.344
+2018-12-25 12:10:21,263 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.336
+2018-12-25 12:15:09,117 : INFO : Done epoch 10. Valid accuracy: 96.9% Train accuracy: 97.4% 
+2018-12-25 12:19:56,828 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.336
+2018-12-25 12:24:45,936 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.333
+2018-12-25 12:29:31,235 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.339
+2018-12-25 12:34:23,793 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.332
+2018-12-25 12:39:15,431 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.333
+2018-12-25 12:44:00,208 : INFO : Done epoch 11. Valid accuracy: 96.6% Train accuracy: 97.4% 
+2018-12-25 12:48:50,050 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.330
+2018-12-25 12:53:37,791 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.331
+2018-12-25 12:58:27,759 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.323
+2018-12-25 13:03:15,653 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.321
+2018-12-25 13:08:01,851 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.321
+2018-12-25 13:12:42,774 : INFO : Done epoch 12. Valid accuracy: 97.0% Train accuracy: 97.5% 
+2018-12-25 13:17:27,891 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.316
+2018-12-25 13:22:18,683 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.319
+2018-12-25 13:27:04,985 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.307
+2018-12-25 13:31:53,668 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.321
+2018-12-25 13:36:48,379 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.318
+2018-12-25 13:41:31,526 : INFO : Done epoch 13. Valid accuracy: 97.1% Train accuracy: 97.6% 
+2018-12-25 13:46:20,018 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.310
+2018-12-25 13:51:05,902 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.312
+2018-12-25 13:55:52,202 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.311
+2018-12-25 14:00:47,491 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.310
+2018-12-25 14:05:32,487 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.314
+2018-12-25 14:10:11,769 : INFO : Done epoch 14. Valid accuracy: 97.3% Train accuracy: 97.8% 
+2018-12-25 14:14:58,315 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.304
+2018-12-25 14:19:43,200 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.304
+2018-12-25 14:24:34,212 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.295
+2018-12-25 14:29:22,564 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.301
+2018-12-25 14:34:09,183 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.299
+2018-12-25 14:38:52,315 : INFO : Done epoch 15. Valid accuracy: 97.3% Train accuracy: 97.7% 
+2018-12-25 14:43:49,406 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.287
+2018-12-25 14:48:37,483 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.295
+2018-12-25 14:53:26,779 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.295
+2018-12-25 14:58:12,735 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.286
+2018-12-25 15:02:58,279 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.293
+2018-12-25 15:07:48,240 : INFO : Done epoch 16. Valid accuracy: 97.5% Train accuracy: 98.0% 
+2018-12-25 15:12:38,598 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.292
+2018-12-25 15:17:24,042 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.292
+2018-12-25 15:22:14,631 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.283
+2018-12-25 15:27:04,675 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.284
+2018-12-25 15:31:55,788 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.286
+2018-12-25 15:36:47,401 : INFO : Done epoch 17. Valid accuracy: 97.6% Train accuracy: 98.0% 
+2018-12-25 15:41:38,427 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.282
+2018-12-25 15:46:26,391 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.276
+2018-12-25 15:51:11,005 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.284
+2018-12-25 15:56:01,733 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.280
+2018-12-25 16:00:54,193 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.286
+2018-12-25 16:05:39,329 : INFO : Done epoch 18. Valid accuracy: 97.6% Train accuracy: 98.0% 
+2018-12-25 16:10:25,042 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.284
+2018-12-25 16:15:11,950 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.276
+2018-12-25 16:19:59,652 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.277
+2018-12-25 16:24:48,936 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.272
+2018-12-25 16:29:37,672 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.273
+2018-12-25 16:34:20,726 : INFO : Done epoch 19. Valid accuracy: 97.5% Train accuracy: 98.2% 
+2018-12-25 16:39:05,044 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.275
+2018-12-25 16:43:47,293 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.275
+2018-12-25 16:48:37,525 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.266
+2018-12-25 16:53:27,367 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.272
+2018-12-25 16:58:12,705 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.273
+2018-12-25 17:03:01,451 : INFO : Done epoch 20. Valid accuracy: 97.6% Train accuracy: 98.1% 
+2018-12-25 17:07:51,035 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.271
+2018-12-25 17:12:39,784 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.269
+2018-12-25 17:17:30,268 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.275
+2018-12-25 17:22:18,752 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.263
+2018-12-25 17:27:05,410 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.262
+2018-12-25 17:31:49,133 : INFO : Done epoch 21. Valid accuracy: 97.7% Train accuracy: 98.1% 
+2018-12-25 17:36:41,694 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.263
+2018-12-25 17:41:27,128 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.260
+2018-12-25 17:46:12,325 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.262
+2018-12-25 17:51:03,446 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.260
+2018-12-25 17:55:54,021 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.271
+2018-12-25 18:00:36,671 : INFO : Done epoch 22. Valid accuracy: 97.9% Train accuracy: 98.2% 
+2018-12-25 18:05:24,290 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.266
+2018-12-25 18:10:14,207 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.261
+2018-12-25 18:15:01,954 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.260
+2018-12-25 18:19:51,216 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.254
+2018-12-25 18:24:42,838 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.253
+2018-12-25 18:29:28,690 : INFO : Done epoch 23. Valid accuracy: 97.9% Train accuracy: 98.3% 
+2018-12-25 18:34:19,244 : INFO : Batch 500 of 2987. Avg loss over past 500 batches: 0.259
+2018-12-25 18:39:09,819 : INFO : Batch 1000 of 2987. Avg loss over past 500 batches: 0.251
+2018-12-25 18:43:57,759 : INFO : Batch 1500 of 2987. Avg loss over past 500 batches: 0.258
+2018-12-25 18:48:44,862 : INFO : Batch 2000 of 2987. Avg loss over past 500 batches: 0.253
+2018-12-25 18:53:30,381 : INFO : Batch 2500 of 2987. Avg loss over past 500 batches: 0.253
+2018-12-25 18:58:13,244 : INFO : Done epoch 24. Valid accuracy: 97.6% Train accuracy: 98.2% 
+2018-12-25 18:58:18,545 : INFO : Test set accuracy: 53.6% 

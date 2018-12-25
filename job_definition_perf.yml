@@ -1,6 +1,0 @@
-image: images.borgy.elementai.lan/psteeves/lstm_performance
-reqCores: 1
-reqGpus: 1
-reqRamGbytes: 8
-volumes:
-  - /mnt/home/psteeves/author-verify:/mnt/home/author-verify
