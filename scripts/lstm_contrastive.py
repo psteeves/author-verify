@@ -12,8 +12,6 @@ w_tokenizer = RegexpTokenizer('\w+')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 sequence_length = 200
-overlap = 0
-lstm_num_units = 512
 
 dic = pickle.load(open('../models/dictionary', 'rb'))
 stored_embeddings = pickle.load(open('../models/embeddings', 'rb'))
@@ -30,7 +28,7 @@ def balance_classes(data):
     return balanced
 
 
-def create_data(num_authors, spec_authors = None, split = 0.95, min_words = sequence_length, replace=True):
+def create_data(num_authors, spec_authors = None, split = 0.99, min_words = sequence_length, replace=False):
     """
     Input:
         min_words: min words in article for it to be in data
@@ -87,15 +85,18 @@ def create_data(num_authors, spec_authors = None, split = 0.95, min_words = sequ
     return train_data, valid_data
 
 
-def create_test_set(complement = '../train-data/data_40.csv'):
-    comp_data = pd.read_csv(complement)
-    print('Read')
-    comp_authors = comp_data['author'].unique()
-    all_authors = os.listdir('../data/Reuters-50')
-    authors = list(set(all_authors) - set(comp_authors))
-    test_data, _, _ = create_data(num_authors = 5, spec_authors = authors, split = [1., 1.])
-    print('Test created. Writing...')
-    test_data.to_csv('../train-data/test_data.csv', index=False)
+def create_test_set(complement = '../train-data/data_40.csv', replace = False):
+    if replace:
+        comp_data = pd.read_csv(complement)
+        comp_authors = comp_data['author'].unique()
+        all_authors = os.listdir('../data/Reuters-50')
+        authors = list(set(all_authors) - set(comp_authors))
+        test_data, _ = create_data(num_authors = len(authors), spec_authors = authors, split = 1.)
+        test_data.to_csv('../train-data/test_data.csv', index=False)
+    else:
+        test_data = pd.read_csv('../train-data/test_data.csv')
+        test_data.loc[:,['ref_words', 'cand_words']] = test_data.loc[:,['ref_words', 'cand_words']].applymap(ast.literal_eval)
+    return test_data
 
 
 def generate_batch(data, batch_num, size):
@@ -110,34 +111,35 @@ def get_accuracy(refs_out, candidates_out, threshold, labels):
     dist = tf.sqrt(tf.reduce_sum(tf.square(refs_out - candidates_out), 1, keepdims = True))
     preds = tf.cast(tf.less(dist, threshold), tf.float32)
     score = tf.equal(preds, labels)
-    accuracy = tf.reduce_mean(tf.cast(score, tf.float32))
-    return accuracy
+    acc = tf.reduce_mean(tf.cast(score, tf.float32))
+    return acc
 
 
 def forward_pass(embeds):
     with tf.variable_scope(tf.get_variable_scope(),reuse=tf.AUTO_REUSE):
         initializer = tf.initializers.truncated_normal()
-        seq_length = tf.ones([tf.shape(embeds)[0]], dtype = tf.int32) * 250
+        seq_length = tf.ones([tf.shape(embeds)[0]], dtype = tf.int32) * 200
 
-        lstm_cell_fw = tf.nn.rnn_cell.LSTMCell(lstm_num_units, activation = tf.nn.tanh)
-        lstm_cell_bw = tf.nn.rnn_cell.LSTMCell(lstm_num_units, activation = tf.nn.tanh)
+        lstm_cell_fw = tf.nn.rnn_cell.LSTMCell(512, activation = tf.nn.tanh)
+        lstm_cell_bw = tf.nn.rnn_cell.LSTMCell(512, activation = tf.nn.tanh)
         LSTM_outs = tf.nn.bidirectional_dynamic_rnn(lstm_cell_fw, lstm_cell_bw, embeds, sequence_length = seq_length, dtype = tf.float32)
         final_states = [out.h for out in LSTM_outs[1]]
         concat_states = tf.concat(final_states, axis = -1)
 
-        #drop0 = tf.nn.dropout(concat_states, 1)
-        layer1 = tf.layers.dense(concat_states, 1024, kernel_initializer = initializer, activation = tf.nn.relu)
+        batch_norm0 = tf.layers.batch_normalization(concat_states)
+        drop0 = tf.nn.dropout(batch_norm0, 0.8)
+        layer1 = tf.layers.dense(drop0, 1024, kernel_initializer = initializer, activation = tf.nn.relu)
         batch_norm1 = tf.layers.batch_normalization(layer1)
-        #drop1 = tf.nn.dropout(layer1, 1)
-        layer2 = tf.layers.dense(batch_norm1, 512, kernel_initializer = initializer, activation = tf.nn.relu)
+        drop1 = tf.nn.dropout(batch_norm1, 0.8)
+        layer2 = tf.layers.dense(drop1, 512, kernel_initializer = initializer, activation = tf.nn.relu)
         batch_norm2 = tf.layers.batch_normalization(layer2)
-        #drop2 = tf.nn.dropout(layer2, 1)
+        drop2 = tf.nn.dropout(batch_norm2, 0.8)
         outputs =  tf.layers.dense(batch_norm2, 256, kernel_initializer = initializer, activation = tf.nn.relu)
     return outputs
 
 
-def train(num_authors, train_data, valid_data, test_data, epochs = 20, batch_size = 64, return_results = True):
-    logger = configure_logger(modelname = 'lstm_'+str(num_authors), level=10)
+def train(train_data, valid_data, test_data, epochs = 25, batch_size = 128):
+    logger = configure_logger(modelname = 'lstm_large', level=10)
 
     graph = tf.Graph()
     with graph.as_default():
@@ -149,24 +151,27 @@ def train(num_authors, train_data, valid_data, test_data, epochs = 20, batch_siz
         train_refs_embed = tf.nn.embedding_lookup(embeddings, train_refs)
         train_targets = tf.placeholder(tf.float32, shape = (None,1))
 
-        valid_candidates = tf.constant(generate_batch(valid_data, 0, len(valid_data))[0], dtype=tf.int32)
+        generated_valid = generate_batch(valid_data, 0, len(valid_data))
+        valid_candidates = tf.constant(generated_valid[0], dtype=tf.int32)
         valid_candidates_embed = tf.nn.embedding_lookup(embeddings, valid_candidates)
-        valid_refs = tf.constant(generate_batch(valid_data, 0 , len(valid_data))[1], dtype = tf.int32)
+        valid_refs = tf.constant(generated_valid[1], dtype = tf.int32)
         valid_refs_embed = tf.nn.embedding_lookup(embeddings, valid_refs)
-        valid_targets = tf.constant(generate_batch(valid_data, 0, len(valid_data))[2], dtype=tf.float32)
+        valid_targets = tf.constant(generated_valid[2], dtype=tf.float32)
 
-        test_candidates = tf.constant(generate_batch(test_data, 0, len(test_data))[0], dtype=tf.int32)
+        generated_test = generate_batch(test_data, 0, len(test_data))
+        test_candidates = tf.constant(generated_test[0], dtype=tf.int32)
         test_candidates_embed = tf.nn.embedding_lookup(embeddings, test_candidates)
-        test_refs = tf.constant(generate_batch(test_data, 0, len(test_data))[1], dtype = tf.int32)
+        test_refs = tf.constant(generated_test[1], dtype = tf.int32)
         test_refs_embed = tf.nn.embedding_lookup(embeddings, test_refs)
-        test_targets = tf.constant(generate_batch(test_data, 0, len(test_data))[2], dtype=tf.float32)
+        test_targets = tf.constant(generated_test[2], dtype=tf.float32)
 
         train_subset = train_data.sample(frac = 0.01)
-        all_train_candidates = tf.constant(generate_batch(train_subset, 0, len(train_subset))[0], dtype=tf.int32)
-        all_train_candidates_embed = tf.nn.embedding_lookup(embeddings, all_train_candidates)
-        all_train_refs = tf.constant(generate_batch(train_subset, 0, len(train_subset))[1], dtype=tf.int32)
-        all_train_refs_embed = tf.nn.embedding_lookup(embeddings, all_train_refs)
-        all_train_targets = tf.constant(generate_batch(train_subset, 0, len(train_subset))[2], dtype=tf.float32)
+        generated_train = generate_batch(train_subset, 0, len(train_subset))
+        subset_train_candidates = tf.constant(generated_train[0], dtype=tf.int32)
+        subset_train_candidates_embed = tf.nn.embedding_lookup(embeddings, subset_train_candidates)
+        subset_train_refs = tf.constant(generated_train[1], dtype=tf.int32)
+        subset_train_refs_embed = tf.nn.embedding_lookup(embeddings, subset_train_refs)
+        subset_train_targets = tf.constant(generated_train[2], dtype=tf.float32)
 
         refs_outputs = forward_pass(train_refs_embed)
         candidates_outputs = forward_pass(train_candidates_embed)
@@ -184,7 +189,7 @@ def train(num_authors, train_data, valid_data, test_data, epochs = 20, batch_siz
         capped_gvs = [(tf.clip_by_value(grad, -clip, clip), var) for grad, var in gvs]
         train_op = optimizer.apply_gradients(capped_gvs)
 
-        train_accuracy = get_accuracy(forward_pass(all_train_refs_embed), forward_pass(all_train_candidates_embed), threshold, all_train_targets)
+        train_accuracy = get_accuracy(forward_pass(subset_train_refs_embed), forward_pass(subset_train_candidates_embed), threshold, subset_train_targets)
         valid_accuracy = get_accuracy(forward_pass(valid_refs_embed), forward_pass(valid_candidates_embed), threshold, valid_targets)
         test_accuracy = get_accuracy(forward_pass(test_refs_embed), forward_pass(test_candidates_embed), threshold, test_targets)
 
@@ -199,19 +204,19 @@ def train(num_authors, train_data, valid_data, test_data, epochs = 20, batch_siz
             cum_l = 0
             for batch in range(num_batches):
                 batch_candidates, batch_refs, batch_targets = generate_batch(train_data, batch, batch_size)
-                feed_dict = {train_candidates: batch_candidates, train_refs: batch_refs, train_targets: batch_targets, learning_rate: 0.0002 + 0.0008 * 0.3**epoch, clip: 0.05 + 0.15 * 0.3**epoch}
+                feed_dict = {train_candidates: batch_candidates, train_refs: batch_refs, train_targets: batch_targets, learning_rate: 0.0002 + 0.0008 * 0.4**epoch, clip: 0.05 + 0.15 * 0.2**epoch}
                 _, l = sess.run([train_op, loss], feed_dict=feed_dict)
                 cum_l += l
-                if (batch + 1) % 100 == 0:
-                    msg = 'Batch {} of {}. Avg loss over past 100 batches: {:0.3f}'.format(batch + 1, num_batches, cum_l/100)
+                if (batch + 1) % 500 == 0:
+                    msg = 'Batch {} of {}. Avg loss over past 500 batches: {:0.3f}'.format(batch + 1, num_batches, cum_l/500)
                     cum_l = 0
                     logger.info(msg)
 
 
             valid_acc = valid_accuracy.eval()
-            msg = 'Done epoch {}. '.format(epoch)
-            msg += 'Validation accuracy: {:.1%} '.format(valid_acc)
-            msg += 'Training accuracy: {:.1%} '.format(train_accuracy.eval())
+            msg = 'Done epoch {}. '.format(epoch+1)
+            msg += 'Valid accuracy: {:.1%} '.format(valid_acc)
+            msg += 'Train accuracy: {:.1%} '.format(train_accuracy.eval())
             logger.info(msg)
             print(msg)
 
@@ -223,18 +228,15 @@ def train(num_authors, train_data, valid_data, test_data, epochs = 20, batch_siz
         saver.restore(sess, "../models/lstm-any-author/model")
         test_acc = test_accuracy.eval()
         logger.info('Test set accuracy: {:.1%} '.format(test_acc))
-        if return_results:
-            return test_acc
 
-def run_model(num_authors = 5):
+
+def run_model(num_authors = 40):
     print('Loading data')
-    split = [0.95]
-    train_data, valid_data = create_data(num_authors = num_authors, split = split, replace = False)
+    train_data, valid_data = create_data(num_authors = num_authors)
+    test_data = create_test_set()
+    test_data = test_data.sample(n = 2000)
     print('Data loaded')
-    output = train(num_authors, train_data, valid_data, test_data, epochs = 20, return_results = True)
-    return output
-
+    train(train_data, valid_data, test_data)
 
 if __name__ == "__main__":
-    #output = run_model(40)
-    create_test_set()
+    run_model()

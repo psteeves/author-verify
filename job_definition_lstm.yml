@@ -1,5 +1,5 @@
 image: images.borgy.elementai.lan/psteeves/lstm_any_author
-reqCores: 1
+reqCores: 2
 reqGpus: 2
 reqRamGbytes: 16
 volumes:
