@@ -205,7 +205,7 @@ def train(train_data, valid_data, test_data, epochs = 25, batch_size = 128):
         test_targets = tf.constant(generated_test[2], dtype=tf.float32)
 
         # Sample of training set to compute accuracy for
-        train_subset = train_data.sample(frac = 0.01)
+        train_subset = train_data.sample(frac = 0.01)     # quick fix to prevent OOM. In future, feed data in batches to placeholder
         generated_train = generate_batch(train_subset, 0, len(train_subset))
         subset_train_candidates = tf.constant(generated_train[0], dtype=tf.int32)
         subset_train_candidates_embed = tf.nn.embedding_lookup(embeddings, subset_train_candidates)
@@ -254,10 +254,10 @@ def train(train_data, valid_data, test_data, epochs = 25, batch_size = 128):
                     logger.info(msg)
                     cum_l = 0
 
-            valid_acc = valid_accuracy.eval()
+            valid_acc = sess.run(valid_accuracy)
             msg = 'Done epoch {}. '.format(epoch+1)
             msg += 'Valid accuracy: {:.1%} '.format(valid_acc)
-            msg += 'Train accuracy: {:.1%} '.format(train_accuracy.eval())
+            msg += 'Train accuracy: {:.1%} '.format(sess.run(train_accuracy))
             logger.info(msg)
             print(msg)
 
@@ -269,7 +269,7 @@ def train(train_data, valid_data, test_data, epochs = 25, batch_size = 128):
     # Restore best model and compute accuracy on out-of-set authors
     with tf.Session(graph=graph) as sess:
         saver.restore(sess, "../models/lstm-any-author/model")
-        test_acc = test_accuracy.eval()
+        test_acc = sess.run(test_accuracy)
         logger.info('Test set accuracy: {:.1%} '.format(test_acc))
 
 
@@ -277,7 +277,7 @@ def run_model(num_authors = 40):
     print('Loading data')
     train_data, valid_data = create_data(num_authors = num_authors)
     test_data = create_test_set()
-    test_data = test_data.sample(n = 2000)
+    test_data = test_data.sample(n = 2000)    # quick fix to prevent OOM. In future, feed data in batches to placeholder
     print('Data loaded')
     train(train_data, valid_data, test_data)
 
