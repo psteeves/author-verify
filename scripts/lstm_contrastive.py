@@ -162,13 +162,10 @@ def forward_pass(embeds):
 
         # Feed forward final layers
         batch_norm0 = tf.layers.batch_normalization(concat_states)
-        drop0 = tf.nn.dropout(batch_norm0, 0.8)
-        layer1 = tf.layers.dense(drop0, 1024, kernel_initializer = initializer, activation = tf.nn.relu)
+        layer1 = tf.layers.dense(batch_norm0, 1024, kernel_initializer = initializer, activation = tf.nn.relu)
         batch_norm1 = tf.layers.batch_normalization(layer1)
-        drop1 = tf.nn.dropout(batch_norm1, 0.8)
-        layer2 = tf.layers.dense(drop1, 512, kernel_initializer = initializer, activation = tf.nn.relu)
+        layer2 = tf.layers.dense(batch_norm1, 512, kernel_initializer = initializer, activation = tf.nn.relu)
         batch_norm2 = tf.layers.batch_normalization(layer2)
-        drop2 = tf.nn.dropout(batch_norm2, 0.8)
         outputs =  tf.layers.dense(batch_norm2, 256, kernel_initializer = initializer, activation = tf.nn.relu)
     return outputs
 
@@ -249,7 +246,7 @@ def train(train_data, valid_data, test_data, epochs = 25, batch_size = 128):
             cum_l = 0
             for batch in range(num_batches):
                 batch_candidates, batch_refs, batch_targets = generate_batch(train_data, batch, batch_size)
-                feed_dict = {train_candidates: batch_candidates, train_refs: batch_refs, train_targets: batch_targets, learning_rate: 0.0002 + 0.0008 * 0.4**epoch, clip: 0.05 + 0.15 * 0.2**epoch}
+                feed_dict = {train_candidates: batch_candidates, train_refs: batch_refs, train_targets: batch_targets, learning_rate: 0.0003 + 0.001 * 0.7**epoch, clip: 0.08 + 0.22 * 0.5**epoch}
                 _, l = sess.run([train_op, loss], feed_dict=feed_dict)
                 cum_l += l
                 if (batch + 1) % 500 == 0:
