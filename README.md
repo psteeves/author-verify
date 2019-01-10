@@ -15,7 +15,7 @@ The dataset was created from the [Reuters 50-50 dataset](https://archive.ics.uci
 
 ### Requirements
 Python packages:
-- tensorflow v1.0 >
+- tensorflow v>=1.0
 - nltk
 
 Hardware:
