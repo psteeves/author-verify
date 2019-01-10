@@ -14,7 +14,7 @@ The networks used were Bi-LSTMs and three dense layers coupled using contrastive
 The dataset was created from the [Reuters 50-50 dataset](https://archive.ics.uci.edu/ml/datasets/Reuter_50_50), which contains 100 texts from 50 different authors all about one subtopic from the larger Reuters RCV1 dataset. For Element AI employees with access to the datacenter, the dataset can be found on the /mnt drive in my home directory in the author-verify/data folder. For others, the dataset can be created by downloading the 50-50 dataset, restructuring it by running [this script](scripts/restructure_data.py) from the command line, only keeping long enough texts by running `validate_text_lengths()` in [this script](scripts/utils.py), and then running `create_data()` in [this script](scripts/lstm_contrastive.py).
 
 ### Requirements
-Python >= 3.6
+Python >= 3.6<br>
 Python packages:
 - tensorflow >=1.0
 - nltk
