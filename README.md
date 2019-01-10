@@ -4,7 +4,9 @@ This project helps solve the problem of authorship verification. After being tra
 
 ### Model
 
-<img src="https://cdn-images-1.medium.com/max/1200/1*XzVUiq-3lYFtZEW3XfmKqg.jpeg" width="200">
+<br>
+<img src="https://cdn-images-1.medium.com/max/1200/1*XzVUiq-3lYFtZEW3XfmKqg.jpeg" width="400">
+<br>
 
 The networks used were Bi-LSTMs and three dense layers coupled using contrastive loss. Read more about contrastive loss [in this paper](http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf) by Hadsell, Chopra, and LeCun
 
