@@ -4,7 +4,7 @@ This project helps solve the problem of authorship verification. After being tra
 
 ### Model
 
-![alt text](https://cdn-images-1.medium.com/max/1200/1*XzVUiq-3lYFtZEW3XfmKqg.jpeg "Siamese Network architecture")
+![alt text](https://cdn-images-1.medium.com/max/1200/1*XzVUiq-3lYFtZEW3XfmKqg.jpeg "Siamese Network architecture" =100x100)
 
 The networks used were Bi-LSTMs and three dense layers coupled using contrastive loss. Read more about contrastive loss [in this paper](http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf) by Hadsell, Chopra, and LeCun
 
