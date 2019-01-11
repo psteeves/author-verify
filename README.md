@@ -1,4 +1,4 @@
-# author-verify
+# Authorship Verification
 
 This project helps solve the problem of authorship verification. After being trained on a corpus of texts from a large set of authors, the model used can discriminate between pairs of texts that were written by the same author and pairs of texts that were written by different ones. It achieved over 97% accuracy on the hold-out set.
 
