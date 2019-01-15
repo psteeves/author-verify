@@ -1,6 +1,7 @@
 import os
 import shutil
-
+from utils import validate_text_lenghts
+from lstm_contrastive import create_data
 
 def restructure_data():
     '''
@@ -23,3 +24,5 @@ def restructure_data():
 
 if __name__ == "__main__":
     restructure_data()
+    validate_text_lengths()
+    create_data(replace=True)
