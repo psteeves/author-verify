@@ -20,4 +20,4 @@ Python packages:
 - nltk
 
 Hardware:
-Model was run on 2GPUs with 12GB
+Model was run on a 12GB GPU.
